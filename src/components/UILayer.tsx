@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react'
 import { SCENE_TEXTS_UK, SCENE_TEXTS_EN, ACCENT } from '../config/scenes'
 import { CHIPS_UK, CHIPS_EN, type ChipItem } from '../config/chips'
-import { useLang, toggleLang } from '../config/lang'
-import { HeaderNav } from './HeaderNav'
+import { useLang } from '../config/lang'
 import { InfoChip } from './InfoChip'
 import { InfoModal } from './InfoModal'
 import { CalcFormContent } from './CalcFormContent'
@@ -79,20 +78,19 @@ export function UILayer({ scene, isTransit = false }: Props) {
   // Стаггер отключён — вход делает единый fade+slide обёртки (без мигания)
   const anim = (_delay: number) => ({}) as const
 
+  // Слушатель события для вызова Квиза из глобальной шапки
+  useEffect(() => {
+    const handleOpenQuiz = () => setOpenModal('quiz')
+    window.addEventListener('open-quiz', handleOpenQuiz)
+    return () => window.removeEventListener('open-quiz', handleOpenQuiz)
+  }, [])
+
   return (
     <div
       className={`pointer-events-none absolute inset-0 z-10 flex flex-col font-sans transition-all duration-500 ease-in-out ${
         isTransit ? 'opacity-0 scale-[0.98]' : 'opacity-100 scale-100'
       }`}
     >
-      {/* Топ-навбар */}
-      <HeaderNav
-        lang={lang}
-        onToggleLang={toggleLang}
-        onNavigateQuiz={() => setOpenModal('quiz')}
-        mounted={mounted}
-      />
-
       {/* Центральный контент — идеальная вертикальная центровка на 100% экрана */}
       <div
         id="cinema-content-scroll"

@@ -1,8 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { ACCENT } from '../config/scenes'
 import { CHIPS_UK, CHIPS_EN, type ChipItem } from '../config/chips'
-import { useLang, toggleLang } from '../config/lang'
-import { HeaderNav } from './HeaderNav'
+import { useLang } from '../config/lang'
 import { InfoChip } from './InfoChip'
 import { InfoModal } from './InfoModal'
 import { CalcFormContent } from './CalcFormContent'
@@ -170,10 +169,6 @@ export function HeroVideoScene4() {
     window.addEventListener('nav-hero4', handleNav)
     return () => window.removeEventListener('nav-hero4', handleNav)
   }, [runDimFade, setCurrentStep])
-
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-  }
 
   // Функция для проигрывания только активного роликового элемента (остальные видео останавливаем)
   const playActiveLoop = (activeEl: HTMLVideoElement | null) => {
@@ -644,13 +639,6 @@ export function HeroVideoScene4() {
 
       {/* Контент верхнего слоя (UILayer) */}
       <div className="relative z-30 flex h-full flex-col font-sans">
-        
-        {/* Топ-навбар: Логотип + Меню + Язык + CTA */}
-        <HeaderNav
-          lang={lang}
-          onToggleLang={toggleLang}
-          onNavigateQuiz={scrollToTop}
-        />
 
         {/* Скроллируемая область контента для мобильных и десктопа */}
         {/* Скроллируемая область контента — вертикальная центровка */}

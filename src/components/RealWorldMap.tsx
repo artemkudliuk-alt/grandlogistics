@@ -380,6 +380,20 @@ export function RealWorldMap() {
     }
   }, [])
 
+  // При входе на карту принудительно пересчитываем габариты Leaflet для 100% заполнения без сдвига
+  useEffect(() => {
+    if (isMapVisible && mapInstanceRef.current) {
+      const map = mapInstanceRef.current
+      map.invalidateSize()
+      const t1 = setTimeout(() => map.invalidateSize(), 80)
+      const t2 = setTimeout(() => map.invalidateSize(), 250)
+      return () => {
+        clearTimeout(t1)
+        clearTimeout(t2)
+      }
+    }
+  }, [isMapVisible])
+
   const filteredLocations = LOCATIONS.filter((l) => {
     if (filterType === 'ports') return l.type === 'port'
     if (filterType === 'origins') return l.type === 'origin'

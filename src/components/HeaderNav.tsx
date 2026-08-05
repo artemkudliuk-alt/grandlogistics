@@ -31,7 +31,25 @@ const SITE_NAV: NavPill[] = [
 
 export function HeaderNav({ lang, onToggleLang, onNavigateQuiz, mounted = true }: HeaderNavProps) {
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [isMapInView, setIsMapInView] = useState(false)
   const f = FORM_TEXTS[lang]
+
+  // Мониторинг видимости секции карты s1
+  useEffect(() => {
+    const s1 = document.getElementById('s1')
+    if (!s1) return
+
+    const handleScroll = () => {
+      const rect = s1.getBoundingClientRect()
+      // Карта считается активной, когда её вершина находится в зоне видимости
+      const inView = rect.top <= window.innerHeight * 0.4 && rect.bottom >= window.innerHeight * 0.4
+      setIsMapInView(inView)
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    handleScroll()
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   // Блокируем переключение 3D сцен при открытом мобильном меню и отключаем скролл заднего фона
   useEffect(() => {
@@ -57,7 +75,8 @@ export function HeaderNav({ lang, onToggleLang, onNavigateQuiz, mounted = true }
       } else {
         const el = document.getElementById(target)
         if (el) {
-          el.scrollIntoView({ behavior: 'smooth' })
+          const targetY = el.getBoundingClientRect().top + window.scrollY
+          window.scrollTo({ top: targetY, behavior: 'smooth' })
         }
       }
     }, 60)
@@ -79,7 +98,10 @@ export function HeaderNav({ lang, onToggleLang, onNavigateQuiz, mounted = true }
       }
       if (item.targetId) {
         const el = document.getElementById(item.targetId)
-        if (el) el.scrollIntoView({ behavior: 'smooth' })
+        if (el) {
+          const targetY = el.getBoundingClientRect().top + window.scrollY
+          window.scrollTo({ top: targetY, behavior: 'smooth' })
+        }
       }
     }, 60)
   }
@@ -87,7 +109,7 @@ export function HeaderNav({ lang, onToggleLang, onNavigateQuiz, mounted = true }
   return (
     <>
       <header
-        className="relative z-40 w-full border-b border-white/10 bg-black/50 backdrop-blur-2xl shadow-[0_4px_24px_rgba(0,0,0,0.5)] transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]"
+        className="fixed top-0 left-0 right-0 z-40 w-full border-b border-white/10 bg-black/60 backdrop-blur-2xl shadow-[0_4px_24px_rgba(0,0,0,0.5)] transition-all duration-300 ease-out"
         style={{
           opacity: mounted ? 1 : 0,
           transform: mounted ? 'translateY(0)' : 'translateY(-20px)',
@@ -164,8 +186,10 @@ export function HeaderNav({ lang, onToggleLang, onNavigateQuiz, mounted = true }
           </div>
         </div>
 
-        {/* === MOBILE === */}
-        <div className="flex md:hidden items-center justify-between px-4 py-3">
+        {/* === MOBILE: Видно на всех экранах, КРОМЕ Карты (isMapInView) === */}
+        <div className={`flex md:hidden items-center justify-between px-4 py-3 transition-all duration-300 ${
+          isMapInView ? 'opacity-0 pointer-events-none -translate-y-4' : 'opacity-100 pointer-events-auto translate-y-0'
+        }`}>
           {/* Burger */}
           <button
             onClick={() => setMobileOpen(true)}
