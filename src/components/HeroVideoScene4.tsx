@@ -517,13 +517,14 @@ export function HeroVideoScene4() {
 
       {/* 1. Видео-слой 4-й сцены (loop04.mp4) */}
       <video
-        ref={video4Ref}
+        ref={(el) => { video4Ref.current = el; if (el) { el.muted = true; el.defaultMuted = true } }}
         src={getPreferredVideoSrc('/videos/loop04.mp4')}
-        poster="/videos/loop04_poster.jpg"
         className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ease-in-out pointer-events-none"
         style={{
           opacity: currentStep === 'scene4' || prevStep === 'scene4' ? 1 : 0,
           zIndex: currentStep === 'scene4' ? 3 : prevStep === 'scene4' ? 2 : 1,
+          transform: 'translateZ(0)',
+          willChange: 'opacity',
         }}
         muted
         playsInline
@@ -533,13 +534,14 @@ export function HeroVideoScene4() {
 
       {/* 2. Видео-слой 3D пролета 4-5 (transit45.mp4) */}
       <video
-        ref={transit45Ref}
+        ref={(el) => { transit45Ref.current = el; if (el) { el.muted = true; el.defaultMuted = true } }}
         src={getPreferredVideoSrc('/videos/transit45.mp4')}
-        poster="/videos/transit45_poster.jpg"
         className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ease-in-out pointer-events-none"
         style={{
           opacity: currentStep === 'transit45' || prevStep === 'transit45' ? 1 : 0,
           zIndex: currentStep === 'transit45' ? 3 : prevStep === 'transit45' ? 2 : 1,
+          transform: 'translateZ(0)',
+          willChange: 'opacity',
         }}
         muted
         playsInline
@@ -548,13 +550,14 @@ export function HeroVideoScene4() {
 
       {/* 3. Видео-слой 5-й сцены (loop05.mp4) */}
       <video
-        ref={video5Ref}
+        ref={(el) => { video5Ref.current = el; if (el) { el.muted = true; el.defaultMuted = true } }}
         src={getPreferredVideoSrc('/videos/loop05.mp4')}
-        poster="/videos/loop05_poster.jpg"
         className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ease-in-out pointer-events-none"
         style={{
           opacity: currentStep === 'scene5' || prevStep === 'scene5' ? 1 : 0,
           zIndex: currentStep === 'scene5' ? 3 : prevStep === 'scene5' ? 2 : 1,
+          transform: 'translateZ(0)',
+          willChange: 'opacity',
         }}
         muted
         playsInline
@@ -564,13 +567,14 @@ export function HeroVideoScene4() {
 
       {/* 4. Видео-слой 3D пролета 5-6 (transit56.mp4) */}
       <video
-        ref={transit56Ref}
+        ref={(el) => { transit56Ref.current = el; if (el) { el.muted = true; el.defaultMuted = true } }}
         src={getPreferredVideoSrc('/videos/transit56.mp4')}
-        poster="/videos/transit56_poster.jpg"
         className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ease-in-out pointer-events-none"
         style={{
           opacity: currentStep === 'transit56' || prevStep === 'transit56' ? 1 : 0,
           zIndex: currentStep === 'transit56' ? 3 : prevStep === 'transit56' ? 2 : 1,
+          transform: 'translateZ(0)',
+          willChange: 'opacity',
         }}
         muted
         playsInline
@@ -579,13 +583,14 @@ export function HeroVideoScene4() {
 
       {/* 5. Видео-слой 6-й сцены (loop06.mp4) */}
       <video
-        ref={video6Ref}
+        ref={(el) => { video6Ref.current = el; if (el) { el.muted = true; el.defaultMuted = true } }}
         src={getPreferredVideoSrc('/videos/loop06.mp4')}
-        poster="/videos/loop06_poster.jpg"
         className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ease-in-out pointer-events-none"
         style={{
           opacity: currentStep === 'scene6' || prevStep === 'scene6' ? 1 : 0,
           zIndex: currentStep === 'scene6' ? 3 : prevStep === 'scene6' ? 2 : 1,
+          transform: 'translateZ(0)',
+          willChange: 'opacity',
         }}
         muted
         playsInline
@@ -595,13 +600,14 @@ export function HeroVideoScene4() {
 
       {/* 6. Видео-слой 3D пролета 6-7 (transit67.mp4) */}
       <video
-        ref={transit67Ref}
+        ref={(el) => { transit67Ref.current = el; if (el) { el.muted = true; el.defaultMuted = true } }}
         src={getPreferredVideoSrc('/videos/transit67.mp4')}
-        poster="/videos/transit67_poster.jpg"
         className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ease-in-out pointer-events-none"
         style={{
           opacity: currentStep === 'transit67' || prevStep === 'transit67' ? 1 : 0,
           zIndex: currentStep === 'transit67' ? 3 : prevStep === 'transit67' ? 2 : 1,
+          transform: 'translateZ(0)',
+          willChange: 'opacity',
         }}
         muted
         playsInline
@@ -610,13 +616,14 @@ export function HeroVideoScene4() {
 
       {/* 7. Видео-слой 7-й сцены (loop07.mp4) */}
       <video
-        ref={video7Ref}
+        ref={(el) => { video7Ref.current = el; if (el) { el.muted = true; el.defaultMuted = true } }}
         src={getPreferredVideoSrc('/videos/loop07.mp4')}
-        poster="/videos/loop07_poster.jpg"
         className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ease-in-out pointer-events-none"
         style={{
           opacity: currentStep === 'scene7' || prevStep === 'scene7' ? 1 : 0,
           zIndex: currentStep === 'scene7' ? 3 : prevStep === 'scene7' ? 2 : 1,
+          transform: 'translateZ(0)',
+          willChange: 'opacity',
         }}
         muted
         playsInline

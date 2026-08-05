@@ -56,7 +56,9 @@ export function preloadVideo(baseSrc: string, onProgress?: (pct: number) => void
       if (video.buffered.length > 0 && video.duration > 0) {
         const pct = Math.min(100, Math.round((video.buffered.end(0) / video.duration) * 100))
         if (onProgress) onProgress(pct)
-        if (video.buffered.end(0) >= video.duration * 0.85 || video.buffered.end(0) > 2.5) {
+        const isLoop01 = baseSrc.includes('loop01')
+        const requiredBuffer = isLoop01 ? video.duration * 0.95 : video.duration * 0.85
+        if (video.buffered.end(0) >= requiredBuffer || (!isLoop01 && video.buffered.end(0) > 3.0)) {
           onCanPlay()
         }
       }

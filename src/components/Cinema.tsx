@@ -429,13 +429,20 @@ export function Cinema() {
         return (
           <video
             key={`cinema-v-${i}`}
-            ref={(el) => { videoRefs.current[i] = el }}
+            ref={(el) => {
+              videoRefs.current[i] = el
+              if (el) {
+                el.muted = true
+                el.defaultMuted = true
+              }
+            }}
             src={videoSrc}
-            poster={step.src.replace('.mp4', '_poster.jpg')}
             className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ease-in-out pointer-events-none"
             style={{
               opacity: isCurrent || isPrev ? 1 : 0,
               zIndex: isCurrent ? 3 : isPrev ? 2 : 1,
+              transform: 'translateZ(0)',
+              willChange: 'opacity',
             }}
             muted
             playsInline
