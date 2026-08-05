@@ -13,7 +13,7 @@ export function Preloader() {
     // 1. Запускаем систему пошаговой загрузки видео
     startSequentialPreload()
 
-    // 2. Форсируем запуск и проверяем, что видео УЖЕ УСПЕШНО БЕЖИТ (currentTime > 0.4s) прямо под прелоадером
+    // 2. Форсируем запуск и проверяем, что видео УЖЕ УСПЕШНО БЕЖИТ МИНИМУМ 1.0 СЕКУНДУ за занавесом
     const checkVideoRunning = () => {
       const v0 = document.querySelector('video') as HTMLVideoElement | null
       if (v0) {
@@ -22,8 +22,11 @@ export function Preloader() {
         if (v0.paused) {
           v0.play().catch(() => {})
         }
-        // Условие 100% плавного входа: видео УЖЕ УСПЕШНО ПРОИГРЫВАЕТСЯ (>0.4с) за прелоадером
-        if (v0.currentTime > 0.4 && !v0.paused) {
+        // СТРОГОЕ УСЛОВИЕ 100%: Видео полностью в буфере RAM И проработало минимум 1.0 секунду за прелоадером
+        const isBuffered = v0.buffered.length > 0 && v0.buffered.end(0) >= v0.duration * 0.9
+        const hasRunOneSecond = v0.currentTime >= 1.0 && !v0.paused
+
+        if (isBuffered && hasRunOneSecond) {
           heroLoaded = true
         }
       }
