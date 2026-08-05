@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { subscribePreloaderProgress, startSequentialPreload } from '../utils/videoPreloader'
+import { startSequentialPreload } from '../utils/videoPreloader'
 
 export function Preloader() {
   const [progress, setProgress] = useState(0)
@@ -13,36 +13,41 @@ export function Preloader() {
     // 1. Запускаем систему пошаговой загрузки видео
     startSequentialPreload()
 
-    // 2. Слушаем сигнал: видео УЖЕ физически проигрывается в GPU на экране
-    const onHeroPlaying = () => {
-      heroLoaded = true
-    }
-    window.addEventListener('hero-video-playing', onHeroPlaying)
-
-    // 3. Слушаем прелоадер кэша
-    const unsubscribe = subscribePreloaderProgress((_pct, heroReady) => {
-      if (heroReady) {
-        heroLoaded = true
+    // 2. Форсируем запуск и проверяем, что видео УЖЕ УСПЕШНО БЕЖИТ (currentTime > 0.4s) прямо под прелоадером
+    const checkVideoRunning = () => {
+      const v0 = document.querySelector('video') as HTMLVideoElement | null
+      if (v0) {
+        v0.muted = true
+        v0.defaultMuted = true
+        if (v0.paused) {
+          v0.play().catch(() => {})
+        }
+        // Условие 100% плавного входа: видео УЖЕ УСПЕШНО ПРОИГРЫВАЕТСЯ (>0.4с) за прелоадером
+        if (v0.currentTime > 0.4 && !v0.paused) {
+          heroLoaded = true
+        }
       }
-    })
+    }
 
-    // 4. Плавный тикающий таймер прогресса (спокойное движение 0% -> 95%)
-    const interval = setInterval(() => {
+    const checkInterval = setInterval(checkVideoRunning, 50)
+
+    // 3. Плавный тикающий таймер прогресса (спокойное движение 0% -> 95%)
+    const progressInterval = setInterval(() => {
       if (!heroLoaded) {
-        // Плавно подтягиваем процент до 95% без прыжков
         if (currentPct < 95) {
           currentPct += 1
           setProgress(currentPct)
         }
-        // На 95% спокойно ждём реального старта видео кадров
+        // На 95% спокойно ждём, пока видео наберёт непрерывный ход > 0.4с за прелоадером
       } else {
-        // Видео 1-го экрана уже в действии! Завершаем 95% -> 100% и убираем занавес
+        // Видео УЖЕ БЕЖИТ в полном 30fps движении! Снимаем занавес!
         if (currentPct < 100) {
           currentPct += 5
           if (currentPct > 100) currentPct = 100
           setProgress(currentPct)
         } else {
-          clearInterval(interval)
+          clearInterval(progressInterval)
+          clearInterval(checkInterval)
           setTimeout(() => {
             setIsReady(true)
             setTimeout(() => setShouldRender(false), 700)
@@ -51,16 +56,15 @@ export function Preloader() {
       }
     }, 35)
 
-    // Защитный фолбэк (максимум 6 секунд на случай слабого 3G)
+    // Максимальный фолбэк (6 секунд на случай слабейшей сети)
     const fallbackTimer = setTimeout(() => {
       heroLoaded = true
     }, 6000)
 
     return () => {
-      clearInterval(interval)
+      clearInterval(progressInterval)
+      clearInterval(checkInterval)
       clearTimeout(fallbackTimer)
-      window.removeEventListener('hero-video-playing', onHeroPlaying)
-      unsubscribe()
     }
   }, [])
 

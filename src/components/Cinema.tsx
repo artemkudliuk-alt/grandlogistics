@@ -445,6 +445,7 @@ export function Cinema() {
               willChange: 'opacity',
             }}
             muted
+            autoPlay
             playsInline
             loop={step.kind === 'loop'}
             preload="auto"
