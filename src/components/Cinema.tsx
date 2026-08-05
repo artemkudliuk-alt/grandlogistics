@@ -405,11 +405,14 @@ export function Cinema() {
 
   return (
     <div className="relative h-screen w-full overflow-hidden bg-black">
-      {/* Видео-слои первых 3-х сцен — Настоящий 100% Crossfade без черных провалов */}
+      {/* Видео-слои первых 3-х сцен — Настоящий 100% Crossfade без черных провалов и с освобождением GPU RAM */}
       {CINEMA_STEPS.map((step, i) => {
         const isCurrent = i === activeStep
         const isPrev = i === prevActiveStep
-        const isVisible = isCurrent || isPrev
+        const isNext = i === activeStep + 1 || i === activeStep - 1
+        const shouldMount = isCurrent || isPrev || isNext
+
+        if (!shouldMount) return null
 
         return (
           <video
@@ -418,7 +421,7 @@ export function Cinema() {
             poster={step.src.replace('.mp4', '_poster.jpg')}
             className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ease-in-out"
             style={{
-              opacity: isVisible ? 1 : 0,
+              opacity: isCurrent || isPrev ? 1 : 0,
               zIndex: isCurrent ? 3 : isPrev ? 2 : 1,
             }}
             muted
