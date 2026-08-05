@@ -192,7 +192,7 @@ export function HeaderNav({ lang, onToggleLang, onNavigateQuiz, mounted = true }
 
           {/* Drawer Header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-slate-300/80 bg-white/80 backdrop-blur-md">
-            <img src="/logo.png" alt="Grand Logistics" className="h-8 w-auto" />
+            <img src="/logo2.png" alt="Grand Logistics" className="h-8 w-auto" />
             {/* Флаги в шапке дровера */}
             <div className="flex items-center gap-2">
               <button

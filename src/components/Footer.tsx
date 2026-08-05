@@ -22,7 +22,7 @@ export function Footer() {
           <div className="flex flex-col gap-4">
             <div>
               <img
-                src="/logo.png"
+                src="/logo2.png"
                 alt="Grand Logistics"
                 className="h-12 w-auto object-contain"
               />
