@@ -19,22 +19,13 @@ function notifyListeners(heroReady: boolean) {
   progressListeners.forEach((fn) => fn(heroReady ? 100 : 50, heroReady))
 }
 
-let canPlayWebmCache: boolean | null = null
-
 export function getPreferredVideoSrc(basePath: string): string {
-  if (canPlayWebmCache === null) {
-    if (typeof document !== 'undefined') {
-      const v = document.createElement('video')
-      canPlayWebmCache = v.canPlayType('video/webm; codecs="vp9"').length > 0 || v.canPlayType('video/webm').length > 0
-    } else {
-      canPlayWebmCache = false
-    }
+  if (typeof window === 'undefined') return basePath
+  const isMobile = window.innerWidth < 768 || /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)
+  if (isMobile) {
+    return basePath.replace('.mp4', '_mobile.mp4')
   }
-
-  if (canPlayWebmCache) {
-    return basePath.replace('.mp4', '_mobile.webm')
-  }
-  return basePath.replace('.mp4', '_mobile.mp4')
+  return basePath
 }
 
 /** Быстро подгружает начальный буфер 1 конкретного видео ролика с помощью HTML5 Video element */

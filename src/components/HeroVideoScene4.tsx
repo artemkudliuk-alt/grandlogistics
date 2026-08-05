@@ -6,7 +6,7 @@ import { HeaderNav } from './HeaderNav'
 import { InfoChip } from './InfoChip'
 import { InfoModal } from './InfoModal'
 import { CalcFormContent } from './CalcFormContent'
-import { prioritizeVideoLoad } from '../utils/videoPreloader'
+import { prioritizeVideoLoad, getPreferredVideoSrc } from '../utils/videoPreloader'
 
 type Hero4SceneKey = 'scene4' | 'scene5' | 'scene6' | 'scene7'
 
@@ -516,148 +516,113 @@ export function HeroVideoScene4() {
       `}</style>
 
       {/* 1. Видео-слой 4-й сцены (loop04.mp4) */}
-      {(currentStep === 'scene4' || prevStep === 'scene4' || currentStep === 'transit45') && (
-        <video
-          ref={video4Ref}
-          poster="/videos/loop04_poster.jpg"
-          className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ease-in-out"
-          style={{
-            opacity: currentStep === 'scene4' || prevStep === 'scene4' ? 1 : 0,
-            zIndex: currentStep === 'scene4' ? 3 : prevStep === 'scene4' ? 2 : 1,
-          }}
-          muted
-          playsInline
-          loop
-          preload="auto"
-        >
-          <source src="/videos/loop04_mobile.webm" type="video/webm" />
-          <source src="/videos/loop04_mobile.mp4" type="video/mp4" />
-          <source src="/videos/loop04.mp4" type="video/mp4" />
-        </video>
-      )}
+      <video
+        ref={video4Ref}
+        src={getPreferredVideoSrc('/videos/loop04.mp4')}
+        poster="/videos/loop04_poster.jpg"
+        className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ease-in-out pointer-events-none"
+        style={{
+          opacity: currentStep === 'scene4' || prevStep === 'scene4' ? 1 : 0,
+          zIndex: currentStep === 'scene4' ? 3 : prevStep === 'scene4' ? 2 : 1,
+        }}
+        muted
+        playsInline
+        loop
+        preload="auto"
+      />
 
       {/* 2. Видео-слой 3D пролета 4-5 (transit45.mp4) */}
-      {(currentStep === 'transit45' || prevStep === 'transit45' || currentStep === 'scene4' || currentStep === 'scene5') && (
-        <video
-          ref={transit45Ref}
-          poster="/videos/transit45_poster.jpg"
-          className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ease-in-out"
-          style={{
-            opacity: currentStep === 'transit45' || prevStep === 'transit45' ? 1 : 0,
-            zIndex: currentStep === 'transit45' ? 3 : prevStep === 'transit45' ? 2 : 1,
-          }}
-          muted
-          playsInline
-          preload="auto"
-        >
-          <source src="/videos/transit45_mobile.webm" type="video/webm" />
-          <source src="/videos/transit45_mobile.mp4" type="video/mp4" />
-          <source src="/videos/transit45.mp4" type="video/mp4" />
-        </video>
-      )}
+      <video
+        ref={transit45Ref}
+        src={getPreferredVideoSrc('/videos/transit45.mp4')}
+        poster="/videos/transit45_poster.jpg"
+        className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ease-in-out pointer-events-none"
+        style={{
+          opacity: currentStep === 'transit45' || prevStep === 'transit45' ? 1 : 0,
+          zIndex: currentStep === 'transit45' ? 3 : prevStep === 'transit45' ? 2 : 1,
+        }}
+        muted
+        playsInline
+        preload="auto"
+      />
 
       {/* 3. Видео-слой 5-й сцены (loop05.mp4) */}
-      {(currentStep === 'scene5' || prevStep === 'scene5' || currentStep === 'transit45' || currentStep === 'transit56') && (
-        <video
-          ref={video5Ref}
-          poster="/videos/loop05_poster.jpg"
-          className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ease-in-out"
-          style={{
-            opacity: currentStep === 'scene5' || prevStep === 'scene5' ? 1 : 0,
-            zIndex: currentStep === 'scene5' ? 3 : prevStep === 'scene5' ? 2 : 1,
-          }}
-          muted
-          playsInline
-          loop
-          preload="auto"
-        >
-          <source src="/videos/loop05_mobile.webm" type="video/webm" />
-          <source src="/videos/loop05_mobile.mp4" type="video/mp4" />
-          <source src="/videos/loop05.mp4" type="video/mp4" />
-        </video>
-      )}
+      <video
+        ref={video5Ref}
+        src={getPreferredVideoSrc('/videos/loop05.mp4')}
+        poster="/videos/loop05_poster.jpg"
+        className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ease-in-out pointer-events-none"
+        style={{
+          opacity: currentStep === 'scene5' || prevStep === 'scene5' ? 1 : 0,
+          zIndex: currentStep === 'scene5' ? 3 : prevStep === 'scene5' ? 2 : 1,
+        }}
+        muted
+        playsInline
+        loop
+        preload="auto"
+      />
 
       {/* 4. Видео-слой 3D пролета 5-6 (transit56.mp4) */}
-      {(currentStep === 'transit56' || prevStep === 'transit56' || currentStep === 'scene5' || currentStep === 'scene6') && (
-        <video
-          ref={transit56Ref}
-          poster="/videos/transit56_poster.jpg"
-          className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ease-in-out"
-          style={{
-            opacity: currentStep === 'transit56' || prevStep === 'transit56' ? 1 : 0,
-            zIndex: currentStep === 'transit56' ? 3 : prevStep === 'transit56' ? 2 : 1,
-          }}
-          muted
-          playsInline
-          preload="auto"
-        >
-          <source src="/videos/transit56_mobile.webm" type="video/webm" />
-          <source src="/videos/transit56_mobile.mp4" type="video/mp4" />
-          <source src="/videos/transit56.mp4" type="video/mp4" />
-        </video>
-      )}
+      <video
+        ref={transit56Ref}
+        src={getPreferredVideoSrc('/videos/transit56.mp4')}
+        poster="/videos/transit56_poster.jpg"
+        className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ease-in-out pointer-events-none"
+        style={{
+          opacity: currentStep === 'transit56' || prevStep === 'transit56' ? 1 : 0,
+          zIndex: currentStep === 'transit56' ? 3 : prevStep === 'transit56' ? 2 : 1,
+        }}
+        muted
+        playsInline
+        preload="auto"
+      />
 
       {/* 5. Видео-слой 6-й сцены (loop06.mp4) */}
-      {(currentStep === 'scene6' || prevStep === 'scene6' || currentStep === 'transit56' || currentStep === 'transit67') && (
-        <video
-          ref={video6Ref}
-          poster="/videos/loop06_poster.jpg"
-          className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ease-in-out"
-          style={{
-            opacity: currentStep === 'scene6' || prevStep === 'scene6' ? 1 : 0,
-            zIndex: currentStep === 'scene6' ? 3 : prevStep === 'scene6' ? 2 : 1,
-          }}
-          muted
-          playsInline
-          loop
-          preload="auto"
-        >
-          <source src="/videos/loop06_mobile.webm" type="video/webm" />
-          <source src="/videos/loop06_mobile.mp4" type="video/mp4" />
-          <source src="/videos/loop06.mp4" type="video/mp4" />
-        </video>
-      )}
+      <video
+        ref={video6Ref}
+        src={getPreferredVideoSrc('/videos/loop06.mp4')}
+        poster="/videos/loop06_poster.jpg"
+        className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ease-in-out pointer-events-none"
+        style={{
+          opacity: currentStep === 'scene6' || prevStep === 'scene6' ? 1 : 0,
+          zIndex: currentStep === 'scene6' ? 3 : prevStep === 'scene6' ? 2 : 1,
+        }}
+        muted
+        playsInline
+        loop
+        preload="auto"
+      />
 
       {/* 6. Видео-слой 3D пролета 6-7 (transit67.mp4) */}
-      {(currentStep === 'transit67' || prevStep === 'transit67' || currentStep === 'scene6' || currentStep === 'scene7') && (
-        <video
-          ref={transit67Ref}
-          poster="/videos/transit67_poster.jpg"
-          className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ease-in-out"
-          style={{
-            opacity: currentStep === 'transit67' || prevStep === 'transit67' ? 1 : 0,
-            zIndex: currentStep === 'transit67' ? 3 : prevStep === 'transit67' ? 2 : 1,
-          }}
-          muted
-          playsInline
-          preload="auto"
-        >
-          <source src="/videos/transit67_mobile.webm" type="video/webm" />
-          <source src="/videos/transit67_mobile.mp4" type="video/mp4" />
-          <source src="/videos/transit67.mp4" type="video/mp4" />
-        </video>
-      )}
+      <video
+        ref={transit67Ref}
+        src={getPreferredVideoSrc('/videos/transit67.mp4')}
+        poster="/videos/transit67_poster.jpg"
+        className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ease-in-out pointer-events-none"
+        style={{
+          opacity: currentStep === 'transit67' || prevStep === 'transit67' ? 1 : 0,
+          zIndex: currentStep === 'transit67' ? 3 : prevStep === 'transit67' ? 2 : 1,
+        }}
+        muted
+        playsInline
+        preload="auto"
+      />
 
       {/* 7. Видео-слой 7-й сцены (loop07.mp4) */}
-      {(currentStep === 'scene7' || prevStep === 'scene7' || currentStep === 'transit67') && (
-        <video
-          ref={video7Ref}
-          poster="/videos/loop07_poster.jpg"
-          className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ease-in-out"
-          style={{
-            opacity: currentStep === 'scene7' || prevStep === 'scene7' ? 1 : 0,
-            zIndex: currentStep === 'scene7' ? 3 : prevStep === 'scene7' ? 2 : 1,
-          }}
-          muted
-          playsInline
-          loop
-          preload="auto"
-        >
-          <source src="/videos/loop07_mobile.webm" type="video/webm" />
-          <source src="/videos/loop07_mobile.mp4" type="video/mp4" />
-          <source src="/videos/loop07.mp4" type="video/mp4" />
-        </video>
-      )}
+      <video
+        ref={video7Ref}
+        src={getPreferredVideoSrc('/videos/loop07.mp4')}
+        poster="/videos/loop07_poster.jpg"
+        className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ease-in-out pointer-events-none"
+        style={{
+          opacity: currentStep === 'scene7' || prevStep === 'scene7' ? 1 : 0,
+          zIndex: currentStep === 'scene7' ? 3 : prevStep === 'scene7' ? 2 : 1,
+        }}
+        muted
+        playsInline
+        loop
+        preload="auto"
+      />
 
 
 
