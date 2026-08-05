@@ -13,7 +13,7 @@ export function Footer() {
   const year = new Date().getFullYear()
 
   return (
-    <footer className="relative z-30 bg-gradient-to-b from-[#131c2b] via-[#101724] to-[#0c121d] border-t border-white/15 text-white backdrop-blur-2xl">
+    <footer className="relative z-30 bg-[#f1f5f9] border-t border-slate-300/80 text-slate-800">
       {/* Top section */}
       <div className="max-w-7xl mx-auto px-6 pt-14 pb-10">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
@@ -27,7 +27,7 @@ export function Footer() {
                 className="h-12 w-auto object-contain"
               />
             </div>
-            <p className="text-sm text-white/70 leading-relaxed max-w-xs font-normal">
+            <p className="text-sm text-slate-600 leading-relaxed max-w-xs font-medium">
               Портове експедирування, контейнерні перевезення, митне оформлення та China Sourcing «під ключ».
             </p>
 
@@ -37,7 +37,7 @@ export function Footer() {
                 href="https://t.me/grand_logistics_bot"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-xs font-bold text-white hover:bg-[#229ED9]/30 hover:border-[#229ED9]/50 hover:text-white transition-all duration-200 shadow-sm"
+                className="flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-xs font-bold text-slate-700 hover:bg-[#229ED9]/10 hover:border-[#229ED9]/40 hover:text-[#229ED9] transition-all duration-200 shadow-sm"
               >
                 {/* Telegram icon */}
                 <svg className="h-4 w-4 text-[#229ED9]" viewBox="0 0 24 24" fill="currentColor">
@@ -49,7 +49,7 @@ export function Footer() {
                 href="https://wa.me/380665715295"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-xs font-bold text-white hover:bg-[#25D366]/30 hover:border-[#25D366]/50 hover:text-white transition-all duration-200 shadow-sm"
+                className="flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-xs font-bold text-slate-700 hover:bg-[#25D366]/10 hover:border-[#25D366]/40 hover:text-[#25D366] transition-all duration-200 shadow-sm"
               >
                 {/* WhatsApp icon */}
                 <svg className="h-4 w-4 text-[#25D366]" viewBox="0 0 24 24" fill="currentColor">
@@ -62,15 +62,15 @@ export function Footer() {
 
           {/* Col 2: Navigation */}
           <div>
-            <h3 className="mb-5 text-xs font-extrabold uppercase tracking-widest text-[#7CC248]">Навігація</h3>
+            <h3 className="mb-5 text-xs font-extrabold uppercase tracking-widest text-[#5a9c2e]">Навігація</h3>
             <ul className="space-y-3">
               {NAV_LINKS.map((link) => (
                 <li key={link.label}>
                   <a
                     href={link.href}
-                    className="text-sm font-medium text-white/80 hover:text-[#7CC248] transition-colors duration-200 flex items-center gap-2 group"
+                    className="text-sm font-semibold text-slate-700 hover:text-[#5a9c2e] transition-colors duration-200 flex items-center gap-2 group"
                   >
-                    <span className="h-px w-3 bg-white/30 group-hover:bg-[#7CC248] group-hover:w-5 transition-all duration-300" />
+                    <span className="h-px w-3 bg-slate-400 group-hover:bg-[#5a9c2e] group-hover:w-5 transition-all duration-300" />
                     {link.label}
                   </a>
                 </li>
@@ -80,25 +80,25 @@ export function Footer() {
 
           {/* Col 3: Contacts */}
           <div>
-            <h3 className="mb-5 text-xs font-extrabold uppercase tracking-widest text-[#7CC248]">Контакти</h3>
+            <h3 className="mb-5 text-xs font-extrabold uppercase tracking-widest text-[#5a9c2e]">Контакти</h3>
             <ul className="space-y-3 text-sm">
               <li className="flex items-start gap-3">
-                <Phone className="mt-0.5 h-4 w-4 shrink-0 text-[#7CC248]" strokeWidth={2.5} />
-                <div className="text-white/85 leading-relaxed font-medium">
+                <Phone className="mt-0.5 h-4 w-4 shrink-0 text-[#5a9c2e]" strokeWidth={2.5} />
+                <div className="text-slate-800 leading-relaxed font-semibold">
                   <div>+38 048 795-21-01</div>
-                  <div className="text-white/50 text-xs">Факс: +38 048 705-14-52</div>
+                  <div className="text-slate-500 text-xs font-normal">Факс: +38 048 705-14-52</div>
                   <div>+38 066 571-52-95</div>
                 </div>
               </li>
               <li className="flex items-center gap-3">
-                <Mail className="h-4 w-4 shrink-0 text-[#7CC248]" strokeWidth={2.5} />
-                <a href="mailto:alexandra@grandlog.com.ua" className="text-white/85 hover:text-[#7CC248] font-medium transition-colors duration-200 break-all">
+                <Mail className="h-4 w-4 shrink-0 text-[#5a9c2e]" strokeWidth={2.5} />
+                <a href="mailto:alexandra@grandlog.com.ua" className="text-slate-800 hover:text-[#5a9c2e] font-semibold transition-colors duration-200 break-all">
                   alexandra@grandlog.com.ua
                 </a>
               </li>
               <li className="flex items-center gap-3">
-                <Globe className="h-4 w-4 shrink-0 text-[#7CC248]" strokeWidth={2.5} />
-                <a href="https://www.grandlog.com.ua" target="_blank" rel="noopener noreferrer" className="text-white/85 hover:text-[#7CC248] font-medium transition-colors duration-200">
+                <Globe className="h-4 w-4 shrink-0 text-[#5a9c2e]" strokeWidth={2.5} />
+                <a href="https://www.grandlog.com.ua" target="_blank" rel="noopener noreferrer" className="text-slate-800 hover:text-[#5a9c2e] font-semibold transition-colors duration-200">
                   www.grandlog.com.ua
                 </a>
               </li>
@@ -109,12 +109,12 @@ export function Footer() {
       </div>
 
       {/* Bottom bar */}
-      <div className="border-t border-white/10 bg-black/30">
+      <div className="border-t border-slate-300/80 bg-slate-200/70">
         <div className="max-w-7xl mx-auto px-6 py-5 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="text-xs text-white/50">
+          <p className="text-xs text-slate-600 font-medium">
             © {year} Grand Logistics. Усі права захищені.
           </p>
-          <p className="text-xs text-white/40">
+          <p className="text-xs text-slate-500 font-normal">
             Дозвіл на митну брокерську діяльність № &nbsp;·&nbsp; ТОВ «Гранд Логістика»
           </p>
         </div>

@@ -180,10 +180,10 @@ export function HeaderNav({ lang, onToggleLang, onNavigateQuiz, mounted = true }
       </header>
 
 
-      {/* --- BURGER MENU OVERLAY / DRAWER FOR MOBILE --- */}
+      {/* --- BURGER MENU OVERLAY / DRAWER FOR MOBILE (Light Gray Theme) --- */}
       {mobileOpen && (
         <div
-          className="pointer-events-auto fixed inset-0 z-[100] flex flex-col bg-gradient-to-b from-[#162030] via-[#121a28] to-[#0e1520] text-white animate-[fadeIn_0.3s_ease-out] overflow-y-auto overscroll-contain"
+          className="pointer-events-auto fixed inset-0 z-[100] flex flex-col bg-[#f1f5f9] text-slate-900 animate-[fadeIn_0.3s_ease-out] overflow-y-auto overscroll-contain"
           onTouchStart={(e) => e.stopPropagation()}
           onTouchMove={(e) => e.stopPropagation()}
           onTouchEnd={(e) => e.stopPropagation()}
@@ -191,24 +191,24 @@ export function HeaderNav({ lang, onToggleLang, onNavigateQuiz, mounted = true }
         >
 
           {/* Drawer Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-300/80 bg-white/80 backdrop-blur-md">
             <img src="/logo.png" alt="Grand Logistics" className="h-8 w-auto" />
             {/* Флаги в шапке дровера */}
             <div className="flex items-center gap-2">
               <button
                 onClick={lang === 'EN' ? onToggleLang : undefined}
                 className={`cursor-pointer transition-all duration-200 rounded-sm overflow-hidden ${
-                  lang === 'UK' ? 'opacity-100 scale-110 ring-1 ring-white/40' : 'opacity-30 grayscale'
+                  lang === 'UK' ? 'opacity-100 scale-110 ring-2 ring-[#7CC248]' : 'opacity-40 grayscale'
                 }`}
                 title="Українська"
               >
                 <img src="/flags/ua.svg" alt="UA" className="w-7 h-5 object-cover" />
               </button>
-              <span className="text-white/20 text-sm">/</span>
+              <span className="text-slate-400 text-sm font-semibold">/</span>
               <button
                 onClick={lang === 'UK' ? onToggleLang : undefined}
                 className={`cursor-pointer transition-all duration-200 rounded-sm overflow-hidden ${
-                  lang === 'EN' ? 'opacity-100 scale-110 ring-1 ring-white/40' : 'opacity-30 grayscale'
+                  lang === 'EN' ? 'opacity-100 scale-110 ring-2 ring-[#7CC248]' : 'opacity-40 grayscale'
                 }`}
                 title="English"
               >
@@ -217,7 +217,7 @@ export function HeaderNav({ lang, onToggleLang, onNavigateQuiz, mounted = true }
             </div>
             <button
               onClick={() => setMobileOpen(false)}
-              className="p-2.5 rounded-full bg-white/10 border border-white/20 text-white hover:bg-white/20 active:scale-95 transition-all"
+              className="p-2.5 rounded-full bg-slate-200/90 border border-slate-300 text-slate-700 hover:bg-slate-300 active:scale-95 transition-all cursor-pointer"
               aria-label="Close menu"
             >
               <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -228,38 +228,38 @@ export function HeaderNav({ lang, onToggleLang, onNavigateQuiz, mounted = true }
 
           {/* 10 навигационных пунктов */}
           <div className="flex-1 flex flex-col px-6 py-6 gap-0">
-            <div className="text-[10px] font-extrabold uppercase tracking-widest text-[#7CC248] mb-4">
+            <div className="text-[10px] font-extrabold uppercase tracking-widest text-[#5a9c2e] mb-4">
               Навігація сайту
             </div>
             {SITE_NAV.map((item) => (
               <button
                 key={item.label}
                 onClick={() => { setMobileOpen(false); handleNavPill(item) }}
-                className="text-left text-xl font-bold text-white hover:text-[#7CC248] transition-colors py-3.5 border-b border-white/8 flex items-center justify-between group"
+                className="text-left text-xl font-bold text-slate-800 hover:text-[#5a9c2e] transition-colors py-3.5 border-b border-slate-300/70 flex items-center justify-between group cursor-pointer"
               >
                 <span>{item.label}</span>
-                <span className="text-white/25 group-hover:text-[#7CC248] transition-colors text-base">➔</span>
+                <span className="text-slate-400 group-hover:text-[#5a9c2e] transition-colors text-base">➔</span>
               </button>
             ))}
           </div>
 
           {/* Нижняя часть: CTA + контакты */}
-          <div className="px-6 py-6 border-t border-white/10 space-y-3">
+          <div className="px-6 py-6 border-t border-slate-300/80 bg-white/60 space-y-3">
             <button
               onClick={() => { setMobileOpen(false); onNavigateQuiz() }}
-              className="w-full rounded-2xl py-4 text-sm font-extrabold text-white shadow-xl flex items-center justify-center gap-2 cursor-pointer active:scale-95 transition-transform"
+              className="w-full rounded-2xl py-4 text-sm font-extrabold text-white shadow-lg flex items-center justify-center gap-2 cursor-pointer active:scale-95 transition-transform"
               style={{ backgroundColor: ACCENT }}
             >
               <span className="inline-block h-2 w-2 rounded-full bg-white" />
               <span>{f.headerCta}</span>
             </button>
 
-            <div className="flex items-center justify-center gap-4 pt-1 text-xs text-white/60">
-              <a href="https://t.me/grand_logistics_bot" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-[#229ED9] hover:text-[#44b8f0] transition-colors">
+            <div className="flex items-center justify-center gap-4 pt-1 text-xs text-slate-600 font-semibold">
+              <a href="https://t.me/grand_logistics_bot" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-[#229ED9] hover:underline">
                 Telegram
               </a>
               <span>•</span>
-              <a href="tel:+380665715295" className="text-emerald-400 hover:text-emerald-300 transition-colors">
+              <a href="tel:+380665715295" className="text-[#5a9c2e] hover:underline">
                 +38 066 571-52-95
               </a>
             </div>
