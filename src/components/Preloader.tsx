@@ -7,44 +7,29 @@ export function Preloader() {
   const [shouldRender, setShouldRender] = useState(true)
 
   useEffect(() => {
-    // 1. Запускаем систему приоритетной последовательной загрузки видео
+    // 1. Запускаем систему пошаговой загрузки видео
     startSequentialPreload()
 
-    // 2. Имитируем быстрый стартовый прогресс для стилей/дизайна
-    let fakeProgress = 0
-    const timer = setInterval(() => {
-      fakeProgress += Math.floor(Math.random() * 18) + 12
-      if (fakeProgress >= 90) {
-        fakeProgress = 90
-        clearInterval(timer)
-      }
-      setProgress((prev) => Math.max(prev, fakeProgress))
-    }, 120)
-
-    // 3. Слушаем готовность критического Hero-видео первого экрана
+    // 2. Слушаем РЕАЛЬНЫЙ прогресс подгрузки 1-го видео-экрана
     const unsubscribe = subscribePreloaderProgress((percent, heroReady) => {
-      if (heroReady) {
-        clearInterval(timer)
+      setProgress((prev) => Math.max(prev, percent))
+      if (heroReady || percent >= 100) {
         setProgress(100)
         setTimeout(() => {
           setIsReady(true)
           setTimeout(() => setShouldRender(false), 700)
-        }, 350)
-      } else {
-        setProgress((prev) => Math.max(prev, percent))
+        }, 300)
       }
     })
 
-    // Фолбэк на случай задержки сети (максимум 2.2с для мгновенного входа)
+    // Фолбэк на случай проблем сети (максимум 4.5с)
     const fallbackTimer = setTimeout(() => {
-      clearInterval(timer)
       setProgress(100)
       setIsReady(true)
       setTimeout(() => setShouldRender(false), 600)
-    }, 2200)
+    }, 4500)
 
     return () => {
-      clearInterval(timer)
       clearTimeout(fallbackTimer)
       unsubscribe()
     }

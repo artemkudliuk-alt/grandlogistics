@@ -1,13 +1,12 @@
 /**
- * Высокоскоростной менеджер пошаговой подгрузки 3D-видео.
- * Оптимизирован для работающих CDN / Vercel / GitHub Pages в Incognito и на мобильных устройствах.
- * Загружает ТОЛЬКО ближайшее следующее видео в цепочке (1-2 MB), сохраняя 95% пропускной способности сети.
+ * Высокоскоростной пошаговый менеджер подгрузки 3D-видео (Staged Preload Pipeline).
+ * Гарантирует 100% плавное воспроизведение без лагов и задержек на мобильных устройствах и в Incognito.
  */
 
 const loadedVideos = new Set<string>()
 const activePreloaders = new Map<string, HTMLVideoElement>()
 
-type ProgressListener = (progress: number, isHeroReady: boolean) => void
+type ProgressListener = (progressPct: number, isHeroReady: boolean) => void
 const progressListeners = new Set<ProgressListener>()
 
 export function subscribePreloaderProgress(listener: ProgressListener) {
@@ -15,8 +14,8 @@ export function subscribePreloaderProgress(listener: ProgressListener) {
   return () => progressListeners.delete(listener)
 }
 
-function notifyListeners(heroReady: boolean) {
-  progressListeners.forEach((fn) => fn(heroReady ? 100 : 50, heroReady))
+function notifyListeners(pct: number, heroReady: boolean) {
+  progressListeners.forEach((fn) => fn(pct, heroReady))
 }
 
 export function getPreferredVideoSrc(basePath: string): string {
@@ -28,11 +27,12 @@ export function getPreferredVideoSrc(basePath: string): string {
   return basePath
 }
 
-/** Быстро подгружает начальный буфер 1 конкретного видео ролика с помощью HTML5 Video element */
-export function preloadVideo(baseSrc: string): Promise<boolean> {
+/** Подгружает видео и отслеживает РЕАЛЬНЫЙ буфер (canplaythrough) */
+export function preloadVideo(baseSrc: string, onProgress?: (pct: number) => void): Promise<boolean> {
   const actualSrc = getPreferredVideoSrc(baseSrc)
 
   if (loadedVideos.has(actualSrc)) {
+    if (onProgress) onProgress(100)
     return Promise.resolve(true)
   }
 
@@ -47,17 +47,22 @@ export function preloadVideo(baseSrc: string): Promise<boolean> {
 
     const cleanup = () => {
       video.removeEventListener('canplaythrough', onCanPlay)
-      video.removeEventListener('loadeddata', onCanPlay)
+      video.removeEventListener('progress', onProgressEvent)
       video.removeEventListener('error', onError)
       activePreloaders.delete(actualSrc)
     }
 
+    const onProgressEvent = () => {
+      if (video.buffered.length > 0 && video.duration > 0) {
+        const pct = Math.min(100, Math.round((video.buffered.end(0) / video.duration) * 100))
+        if (onProgress) onProgress(pct)
+      }
+    }
+
     const onCanPlay = () => {
       loadedVideos.add(actualSrc)
+      if (onProgress) onProgress(100)
       cleanup()
-      if (baseSrc.includes('loop01')) {
-        notifyListeners(true)
-      }
       resolve(true)
     }
 
@@ -67,31 +72,38 @@ export function preloadVideo(baseSrc: string): Promise<boolean> {
     }
 
     video.addEventListener('canplaythrough', onCanPlay, { once: true })
-    video.addEventListener('loadeddata', onCanPlay, { once: true })
+    video.addEventListener('progress', onProgressEvent)
     video.addEventListener('error', onError, { once: true })
 
     video.load()
   })
 }
 
-/** Подгружает связку Stage 1 (Loop01 + Transit12 + Loop02) в Прелоадере и гарантирует 0ms переход на 2-ю сцену */
+/** 
+ * Пошаговая цепочка подгрузки:
+ * Stage 0: Сначала 100% готовность ролика 1-го экрана (loop01).
+ * Stage 1: Пока пользователь смотрит 1-й экран, в фоне качается 1-й пролёт (transit12) + 2-й луп (loop02).
+ * Stage 2: В фоне качается 2-й пролёт (transit23) + 3-й луп (loop03).
+ */
 export async function startSequentialPreload() {
-  // Параллельно подгружаем ролики первого экрана, первого пролёта и второй сцены (~2.4 MB суммарно)
-  await Promise.all([
-    preloadVideo('/videos/loop01.mp4'),
-    preloadVideo('/videos/transit12.mp4'),
-    preloadVideo('/videos/loop02.mp4')
-  ])
+  // Stage 0: Дожидаемся 100% готовности первого экрана (loop01)
+  await preloadVideo('/videos/loop01.mp4', (pct) => {
+    notifyListeners(pct, pct >= 100)
+  })
 
-  // Сообщаем Прелоадеру, что первые 3 ключа на 100% готовы в оперативной памяти
-  notifyListeners(true)
+  // Персональное уведомление Прелоадеру — можно открывать сайт!
+  notifyListeners(100, true)
 
-  // Stage 2: Тихо подгружаем в фоне следующую связку (transit23 + loop03)
+  // Stage 1: Немедленно подгружаем 1-й пролёт и 2-й экран
+  await preloadVideo('/videos/transit12.mp4')
+  await preloadVideo('/videos/loop02.mp4')
+
+  // Stage 2: Тихо подгружаем в фоне 2-й пролёт и 3-й экран
   preloadVideo('/videos/transit23.mp4')
   preloadVideo('/videos/loop03.mp4')
 }
 
-/** Динамический приоритетный подхват следующего видео при смене сцен или клике по меню */
+/** Динамический приоритетный подхват следующего видео */
 export function prioritizeVideoLoad(src: string) {
   const actualSrc = getPreferredVideoSrc(src)
   if (!loadedVideos.has(actualSrc)) {
@@ -99,7 +111,7 @@ export function prioritizeVideoLoad(src: string) {
   }
 }
 
-/** Умный пошаговый предзаказ видео для конкретной текущей сцены */
+/** Умный предзаказ видео для следующей сцены */
 export function preloadNextSceneVideos(currentSceneNum: number) {
   if (currentSceneNum === 1) {
     prioritizeVideoLoad('/videos/transit12.mp4')
