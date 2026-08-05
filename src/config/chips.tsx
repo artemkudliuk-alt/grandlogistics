@@ -86,8 +86,8 @@ export const CHIPS_UK: ChipsConfig = {
     {
       id: 'warrisks',
       icon: ShieldCheck,
-      label: 'War Risks 100%',
-      modalTitle: 'Страхування військових ризиків',
+      label: 'Страхування вантажів',
+      modalTitle: 'Страхування вантажів та військових ризиків',
       modalEyebrow: 'War Risks Coverage',
       modalBody:
         'Повне покриття вантажів та контейнерів при транспортуванні, включаючи страхування військових ризиків (War Risks Coverage) на 100% вартості вантажу.',

@@ -37,11 +37,11 @@ const STEPS: Step[] = [
   },
   {
     num: '03',
-    badgeUk: 'КРОК 3 • WAR RISKS',
+    badgeUk: 'КРОК 3 • СТРАХУВАННЯ',
     badgeEn: 'STEP 3 • WAR RISKS',
     titleUk: '3. Договір & Страхування',
     titleEn: '3. Contract & Insurance',
-    descUk: 'Підписання прямого ЗЕД договору та 100% страхування військових ризиків (War Risks).',
+    descUk: 'Підписання прямого ЗЕД договору та 100% страхування вантажів (включаючи воєнні ризики).',
     descEn: 'Direct FEA contract signing and 100% War Risks insurance coverage.',
     icon: ShieldCheck,
   },
