@@ -87,12 +87,24 @@ export function HeaderNav({ lang, onToggleLang, onNavigateQuiz, mounted = true }
     document.body.style.overflow = ''
     setMobileOpen(false)
 
-    setTimeout(() => {
-      if (item.sceneNum) {
+    if (item.sceneNum) {
+      // Прямое переключение кино-сцен 1/2/3 — сразу
+      setTimeout(() => {
         window.dispatchEvent(new CustomEvent('nav-cinema', { detail: item.sceneNum }))
         window.scrollTo({ top: 0, behavior: 'smooth' })
-        return
-      }
+      }, 60)
+      return
+    }
+
+    // Для секций вне Cinema (Карта, Вантажі, КНР, Схема, Заявка):
+    // Cinema блокирует скролл вниз пока сцена 1 или 2.
+    // Сначала переключаем Cinema на сцену 3 (снимает scroll-lock),
+    // затем ждём анимацию и плавно скроллим к нужной секции.
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent('nav-cinema', { detail: 3 }))
+    }, 60)
+
+    setTimeout(() => {
       if (item.subScene) {
         window.dispatchEvent(new CustomEvent('nav-hero4', { detail: item.subScene }))
       }
@@ -103,7 +115,7 @@ export function HeaderNav({ lang, onToggleLang, onNavigateQuiz, mounted = true }
           window.scrollTo({ top: targetY, behavior: 'smooth' })
         }
       }
-    }, 60)
+    }, 820) // ждём dim-fade Cinema (~500ms) + буфер
   }
 
   return (
