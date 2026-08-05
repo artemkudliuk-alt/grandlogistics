@@ -40,8 +40,6 @@
     -moz-osx-font-smoothing: grayscale !important;
     text-rendering: geometricPrecision !important;
     font-smooth: always !important;
-    transform: translateZ(0);
-    backface-visibility: hidden;
   }
 }
 

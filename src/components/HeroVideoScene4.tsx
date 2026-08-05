@@ -198,6 +198,7 @@ export function HeroVideoScene4() {
 
     runDimFade(() => {
       setCurrentStep(nextTransit)
+      playActiveLoop(videoEl)
 
       if (videoEl) {
         videoEl.currentTime = 0
@@ -206,9 +207,7 @@ export function HeroVideoScene4() {
             videoEl.removeEventListener('ended', handleEnded)
             runDimFade(() => {
               setCurrentStep(nextScene)
-              if (nextLoopEl) {
-                nextLoopEl.play().catch(() => {})
-              }
+              playActiveLoop(nextLoopEl)
             }, 'loop')
             setTimeout(() => { isTransitioningRef.current = false }, 700)
           }
@@ -216,14 +215,14 @@ export function HeroVideoScene4() {
         }).catch(() => {
           runDimFade(() => {
             setCurrentStep(nextScene)
-            if (nextLoopEl) nextLoopEl.play().catch(() => {})
+            playActiveLoop(nextLoopEl)
           }, 'loop')
           isTransitioningRef.current = false
         })
       } else {
         runDimFade(() => {
           setCurrentStep(nextScene)
-          if (nextLoopEl) nextLoopEl.play().catch(() => {})
+          playActiveLoop(nextLoopEl)
         }, 'loop')
         isTransitioningRef.current = false
       }

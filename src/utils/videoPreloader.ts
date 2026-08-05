@@ -38,9 +38,23 @@ function notifyListeners(heroReady: boolean) {
 }
 
 /** Подгружает одно конкретное видео с высоким приоритетом */
-export function preloadVideo(src: string): Promise<boolean> {
+export async function preloadVideo(src: string): Promise<boolean> {
   if (loadedVideos.has(src)) {
-    return Promise.resolve(true)
+    return true
+  }
+
+  // 1. Попытка быстрой подгрузки в HTTP-кэш (идеально для Incognito Mode)
+  try {
+    const response = await fetch(src, { cache: 'force-cache' })
+    if (response.ok) {
+      loadedVideos.add(src)
+      if (src === VIDEO_QUEUE[0]) {
+        notifyListeners(true)
+      }
+      return true
+    }
+  } catch {
+    // В случае CORS или фолбэка используем HTMLVideoElement
   }
 
   return new Promise((resolve) => {
@@ -52,9 +66,17 @@ export function preloadVideo(src: string): Promise<boolean> {
 
     activePreloaders.set(src, video)
 
+    const cleanup = () => {
+      video.removeEventListener('canplaythrough', onCanPlay)
+      video.removeEventListener('loadeddata', onCanPlay)
+      video.removeEventListener('error', onError)
+      video.removeAttribute('src')
+      video.load()
+      activePreloaders.delete(src)
+    }
+
     const onCanPlay = () => {
       loadedVideos.add(src)
-      activePreloaders.delete(src)
       cleanup()
       if (src === VIDEO_QUEUE[0]) {
         notifyListeners(true)
@@ -63,15 +85,8 @@ export function preloadVideo(src: string): Promise<boolean> {
     }
 
     const onError = () => {
-      activePreloaders.delete(src)
       cleanup()
       resolve(false)
-    }
-
-    const cleanup = () => {
-      video.removeEventListener('canplaythrough', onCanPlay)
-      video.removeEventListener('loadeddata', onCanPlay)
-      video.removeEventListener('error', onError)
     }
 
     video.addEventListener('canplaythrough', onCanPlay, { once: true })
