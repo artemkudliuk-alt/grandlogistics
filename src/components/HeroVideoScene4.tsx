@@ -527,7 +527,7 @@ export function HeroVideoScene4() {
         muted
         playsInline
         loop
-        preload="metadata"
+        preload="auto"
       >
         <source src="/videos/loop04_mobile.webm" type="video/webm" />
         <source src="/videos/loop04_mobile.mp4" type="video/mp4" />
@@ -545,7 +545,7 @@ export function HeroVideoScene4() {
         }}
         muted
         playsInline
-        preload="metadata"
+        preload="auto"
       >
         <source src="/videos/transit45_mobile.webm" type="video/webm" />
         <source src="/videos/transit45_mobile.mp4" type="video/mp4" />
@@ -564,7 +564,7 @@ export function HeroVideoScene4() {
         muted
         playsInline
         loop
-        preload="metadata"
+        preload="auto"
       >
         <source src="/videos/loop05_mobile.webm" type="video/webm" />
         <source src="/videos/loop05_mobile.mp4" type="video/mp4" />
@@ -582,7 +582,7 @@ export function HeroVideoScene4() {
         }}
         muted
         playsInline
-        preload="metadata"
+        preload="auto"
       >
         <source src="/videos/transit56_mobile.webm" type="video/webm" />
         <source src="/videos/transit56_mobile.mp4" type="video/mp4" />
@@ -601,7 +601,7 @@ export function HeroVideoScene4() {
         muted
         playsInline
         loop
-        preload="metadata"
+        preload="auto"
       >
         <source src="/videos/loop06_mobile.webm" type="video/webm" />
         <source src="/videos/loop06_mobile.mp4" type="video/mp4" />
@@ -619,7 +619,7 @@ export function HeroVideoScene4() {
         }}
         muted
         playsInline
-        preload="metadata"
+        preload="auto"
       >
         <source src="/videos/transit67_mobile.webm" type="video/webm" />
         <source src="/videos/transit67_mobile.mp4" type="video/mp4" />
@@ -638,7 +638,7 @@ export function HeroVideoScene4() {
         muted
         playsInline
         loop
-        preload="metadata"
+        preload="auto"
       >
         <source src="/videos/loop07_mobile.webm" type="video/webm" />
         <source src="/videos/loop07_mobile.mp4" type="video/mp4" />
