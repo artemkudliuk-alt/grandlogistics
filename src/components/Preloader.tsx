@@ -7,29 +7,51 @@ export function Preloader() {
   const [shouldRender, setShouldRender] = useState(true)
 
   useEffect(() => {
+    let heroLoaded = false
+    let currentPct = 0
+
     // 1. Запускаем систему пошаговой загрузки видео
     startSequentialPreload()
 
-    // 2. Слушаем РЕАЛЬНЫЙ прогресс подгрузки 1-го видео-экрана
-    const unsubscribe = subscribePreloaderProgress((percent, heroReady) => {
-      setProgress((prev) => Math.max(prev, percent))
-      if (heroReady || percent >= 100) {
-        setProgress(100)
-        setTimeout(() => {
-          setIsReady(true)
-          setTimeout(() => setShouldRender(false), 700)
-        }, 300)
+    // 2. Слушаем 100% сигнал готовности буфера первого экрана (loop01)
+    const unsubscribe = subscribePreloaderProgress((_pct, heroReady) => {
+      if (heroReady) {
+        heroLoaded = true
       }
     })
 
-    // Фолбэк на случай проблем сети (максимум 4.5с)
+    // 3. Плавный тикающий таймер прогресса (спокойное движение 0% -> 95%)
+    const interval = setInterval(() => {
+      if (!heroLoaded) {
+        // Плавно подтягиваем процент до 95% без прыжков
+        if (currentPct < 95) {
+          currentPct += 1
+          setProgress(currentPct)
+        }
+        // На 95% спокойно ждём полной готовности loop01
+      } else {
+        // loop01 полностью готов! Доводим 95% -> 100% и открываем сайт
+        if (currentPct < 100) {
+          currentPct += 3
+          if (currentPct > 100) currentPct = 100
+          setProgress(currentPct)
+        } else {
+          clearInterval(interval)
+          setTimeout(() => {
+            setIsReady(true)
+            setTimeout(() => setShouldRender(false), 700)
+          }, 200)
+        }
+      }
+    }, 35)
+
+    // Защитный фолбэк (максимум 6 секунд на случай слабого 3G)
     const fallbackTimer = setTimeout(() => {
-      setProgress(100)
-      setIsReady(true)
-      setTimeout(() => setShouldRender(false), 600)
-    }, 4500)
+      heroLoaded = true
+    }, 6000)
 
     return () => {
+      clearInterval(interval)
       clearTimeout(fallbackTimer)
       unsubscribe()
     }

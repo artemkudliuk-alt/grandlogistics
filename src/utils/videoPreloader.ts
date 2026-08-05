@@ -56,6 +56,9 @@ export function preloadVideo(baseSrc: string, onProgress?: (pct: number) => void
       if (video.buffered.length > 0 && video.duration > 0) {
         const pct = Math.min(100, Math.round((video.buffered.end(0) / video.duration) * 100))
         if (onProgress) onProgress(pct)
+        if (video.buffered.end(0) >= video.duration * 0.85 || video.buffered.end(0) > 2.5) {
+          onCanPlay()
+        }
       }
     }
 
