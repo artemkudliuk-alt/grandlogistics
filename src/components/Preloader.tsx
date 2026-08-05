@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { startSequentialPreload } from '../utils/videoPreloader'
+import { subscribePreloaderProgress, startSequentialPreload } from '../utils/videoPreloader'
 
 export function Preloader() {
   const [progress, setProgress] = useState(0)
@@ -7,13 +7,19 @@ export function Preloader() {
   const [shouldRender, setShouldRender] = useState(true)
 
   useEffect(() => {
-    let heroLoaded = false
+    let networkBufferPct = 0
+    let heroIsRunning = false
     let currentPct = 0
 
     // 1. Запускаем систему пошаговой загрузки видео
     startSequentialPreload()
 
-    // 2. Форсируем запуск и проверяем, что видео УЖЕ УСПЕШНО БЕЖИТ МИНИМУМ 1.0 СЕКУНДУ за занавесом
+    // 2. Слушаем процент подгрузки сетевого буфера файла loop01
+    const unsubscribe = subscribePreloaderProgress((pct) => {
+      networkBufferPct = Math.max(networkBufferPct, pct)
+    })
+
+    // 3. Форсируем запуск DOM-элемента видео и проверяем, что оно РЕАЛЬНО отработало >= 1.0с в 30fps под занавесом
     const checkVideoRunning = () => {
       const v0 = document.querySelector('video') as HTMLVideoElement | null
       if (v0) {
@@ -22,28 +28,27 @@ export function Preloader() {
         if (v0.paused) {
           v0.play().catch(() => {})
         }
-        // СТРОГОЕ УСЛОВИЕ 100%: Видео полностью в буфере RAM И проработало минимум 1.0 секунду за прелоадером
-        const isBuffered = v0.buffered.length > 0 && v0.buffered.end(0) >= v0.duration * 0.9
-        const hasRunOneSecond = v0.currentTime >= 1.0 && !v0.paused
-
-        if (isBuffered && hasRunOneSecond) {
-          heroLoaded = true
+        // Видео считается ГОТОВЫМ, только когда оно уже БЕЖИТ больше 1.0с и кэш скачан >= 90%
+        if (v0.currentTime >= 1.0 && !v0.paused && networkBufferPct >= 90) {
+          heroIsRunning = true
         }
       }
     }
 
     const checkInterval = setInterval(checkVideoRunning, 50)
 
-    // 3. Плавный тикающий таймер прогресса (спокойное движение 0% -> 95%)
+    // 4. Плавный тикающий таймер прогресса
     const progressInterval = setInterval(() => {
-      if (!heroLoaded) {
-        if (currentPct < 95) {
+      const targetPct = Math.min(95, Math.max(currentPct, networkBufferPct))
+
+      if (!heroIsRunning) {
+        // Подтягиваем процент до целевого (до 95%), пока видео разгоняется в фоне
+        if (currentPct < targetPct) {
           currentPct += 1
           setProgress(currentPct)
         }
-        // На 95% спокойно ждём, пока видео наберёт непрерывный ход > 0.4с за прелоадером
       } else {
-        // Видео УЖЕ БЕЖИТ в полном 30fps движении! Снимаем занавес!
+        // Видео УЖЕ открутило 1 секунду за прелоадером в 30fps! Завершаем 95% -> 100% и убираем занавес
         if (currentPct < 100) {
           currentPct += 5
           if (currentPct > 100) currentPct = 100
@@ -59,15 +64,16 @@ export function Preloader() {
       }
     }, 35)
 
-    // Максимальный фолбэк (6 секунд на случай слабейшей сети)
+    // Максимальный фолбэк на случай слабейшего 3G (6 секунд)
     const fallbackTimer = setTimeout(() => {
-      heroLoaded = true
+      heroIsRunning = true
     }, 6000)
 
     return () => {
       clearInterval(progressInterval)
       clearInterval(checkInterval)
       clearTimeout(fallbackTimer)
+      unsubscribe()
     }
   }, [])
 

@@ -91,13 +91,10 @@ export function preloadVideo(baseSrc: string, onProgress?: (pct: number) => void
  * Stage 2: В фоне качается 2-й пролёт (transit23) + 3-й луп (loop03).
  */
 export async function startSequentialPreload() {
-  // Stage 0: Дожидаемся 100% готовности первого экрана (loop01)
+  // Stage 0: Дожидаемся 100% подгрузки сетевого буфера первого экрана (loop01)
   await preloadVideo('/videos/loop01.mp4', (pct) => {
-    notifyListeners(pct, pct >= 100)
+    notifyListeners(pct, false)
   })
-
-  // Персональное уведомление Прелоадеру — можно открывать сайт!
-  notifyListeners(100, true)
 
   // Stage 1: Немедленно подгружаем 1-й пролёт и 2-й экран
   await preloadVideo('/videos/transit12.mp4')
