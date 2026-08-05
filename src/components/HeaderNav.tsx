@@ -183,7 +183,7 @@ export function HeaderNav({ lang, onToggleLang, onNavigateQuiz, mounted = true }
       {/* --- BURGER MENU OVERLAY / DRAWER FOR MOBILE --- */}
       {mobileOpen && (
         <div
-          className="pointer-events-auto fixed inset-0 z-[100] flex flex-col bg-[#0b1019] text-white animate-[fadeIn_0.3s_ease-out] overflow-y-auto overscroll-contain"
+          className="pointer-events-auto fixed inset-0 z-[100] flex flex-col bg-gradient-to-b from-[#162030] via-[#121a28] to-[#0e1520] text-white animate-[fadeIn_0.3s_ease-out] overflow-y-auto overscroll-contain"
           onTouchStart={(e) => e.stopPropagation()}
           onTouchMove={(e) => e.stopPropagation()}
           onTouchEnd={(e) => e.stopPropagation()}
