@@ -33,16 +33,6 @@ export function HeaderNav({ lang, onToggleLang, onNavigateQuiz, mounted = true }
   const [mobileOpen, setMobileOpen] = useState(false)
   const f = FORM_TEXTS[lang]
 
-  const navItems = [
-    { label: 'Головна', target: 'top' },
-    { label: f.navServices, target: 's2' },
-    { label: f.navGeography, target: 's1' },
-    { label: 'Схема роботи', target: 's3' },
-    { label: f.navSourcing, target: 's5' },
-    { label: 'Партнери', target: 'marquee-partners' },
-    { label: f.navContacts, target: 's4' },
-  ]
-
   const handleNavClick = (target: string) => {
     setMobileOpen(false)
     if (target === 'top') {
