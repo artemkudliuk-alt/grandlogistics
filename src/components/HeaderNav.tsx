@@ -17,16 +17,16 @@ interface NavPill {
 }
 
 const SITE_NAV: NavPill[] = [
-  { label: '01 Головна', sceneNum: 1 },
-  { label: '02 Послуги', sceneNum: 2 },
-  { label: '03 Китай', sceneNum: 3 },
-  { label: '04 Карта', targetId: 's1' },
-  { label: '05 Вантажі', subScene: 'scene4', targetId: 's2' },
-  { label: '06 КНР', subScene: 'scene5', targetId: 's2' },
-  { label: '07 Переваги', subScene: 'scene6', targetId: 's2' },
-  { label: '08 Контакти', subScene: 'scene7', targetId: 's2' },
-  { label: '09 Схема', targetId: 's3' },
-  { label: '10 Заявка', targetId: 's4' },
+  { label: 'Головна', sceneNum: 1 },
+  { label: 'Послуги', sceneNum: 2 },
+  { label: 'Китай', sceneNum: 3 },
+  { label: 'Карта', targetId: 's1' },
+  { label: 'Вантажі', subScene: 'scene4', targetId: 's2' },
+  { label: 'КНР Сервіс', subScene: 'scene5', targetId: 's2' },
+  { label: 'Переваги', subScene: 'scene6', targetId: 's2' },
+  { label: 'Контакти', subScene: 'scene7', targetId: 's2' },
+  { label: 'Схема', targetId: 's3' },
+  { label: 'Заявка', targetId: 's4' },
 ]
 
 export function HeaderNav({ lang, onToggleLang, onNavigateQuiz, mounted = true }: HeaderNavProps) {
@@ -108,13 +108,28 @@ export function HeaderNav({ lang, onToggleLang, onNavigateQuiz, mounted = true }
 
           {/* Правая часть: UK/EN + CTA */}
           <div className="shrink-0 pl-6 border-l border-white/15 flex items-center gap-4">
-            {/* Language Toggle */}
-            <button
-              onClick={onToggleLang}
-              className="pointer-events-auto cursor-pointer text-[11px] font-bold text-white/60 hover:text-white transition-colors duration-200 flex items-center gap-1"
-            >
-              <span className={lang === 'UK' ? 'text-[#7CC248]' : ''}>{lang === 'UK' ? '🇺🇦 UA' : '🇬🇧 EN'}</span>
-            </button>
+            {/* Language Toggle — два флага: активный яркий, неактивный тёмный */}
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={lang === 'EN' ? onToggleLang : undefined}
+                className={`pointer-events-auto cursor-pointer text-lg leading-none transition-all duration-200 ${
+                  lang === 'UK' ? 'opacity-100 scale-110 drop-shadow-[0_0_6px_rgba(255,255,255,0.8)]' : 'opacity-25 grayscale hover:opacity-60 hover:grayscale-0'
+                }`}
+                title="Українська"
+              >
+                🇺🇦
+              </button>
+              <span className="text-white/20 text-xs">/</span>
+              <button
+                onClick={lang === 'UK' ? onToggleLang : undefined}
+                className={`pointer-events-auto cursor-pointer text-lg leading-none transition-all duration-200 ${
+                  lang === 'EN' ? 'opacity-100 scale-110 drop-shadow-[0_0_6px_rgba(255,255,255,0.8)]' : 'opacity-25 grayscale hover:opacity-60 hover:grayscale-0'
+                }`}
+                title="English"
+              >
+                🇬🇧
+              </button>
+            </div>
 
             {/* CTA */}
             <style>{`
