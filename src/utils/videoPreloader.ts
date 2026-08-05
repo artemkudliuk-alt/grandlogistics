@@ -1,7 +1,7 @@
 /**
  * Высокоскоростной менеджер пошаговой подгрузки 3D-видео.
  * Оптимизирован для работающих CDN / Vercel / GitHub Pages в Incognito и на мобильных устройствах.
- * Загружает ТОЛЬКО ближайшее следующее видео в цепочке (3-5 MB), сохраняя 95% пропускной способности сети.
+ * Загружает ТОЛЬКО ближайшее следующее видео в цепочке (1-2 MB), сохраняя 95% пропускной способности сети.
  */
 
 const loadedVideos = new Set<string>()
@@ -19,32 +19,52 @@ function notifyListeners(heroReady: boolean) {
   progressListeners.forEach((fn) => fn(heroReady ? 100 : 50, heroReady))
 }
 
+let canPlayWebmCache: boolean | null = null
+
+export function getPreferredVideoSrc(basePath: string): string {
+  if (canPlayWebmCache === null) {
+    if (typeof document !== 'undefined') {
+      const v = document.createElement('video')
+      canPlayWebmCache = v.canPlayType('video/webm; codecs="vp9"').length > 0 || v.canPlayType('video/webm').length > 0
+    } else {
+      canPlayWebmCache = false
+    }
+  }
+
+  if (canPlayWebmCache) {
+    return basePath.replace('.mp4', '_mobile.webm')
+  }
+  return basePath.replace('.mp4', '_mobile.mp4')
+}
+
 /** Быстро подгружает начальный буфер 1 конкретного видео ролика с помощью HTML5 Video element */
-export function preloadVideo(src: string): Promise<boolean> {
-  if (loadedVideos.has(src)) {
+export function preloadVideo(baseSrc: string): Promise<boolean> {
+  const actualSrc = getPreferredVideoSrc(baseSrc)
+
+  if (loadedVideos.has(actualSrc)) {
     return Promise.resolve(true)
   }
 
   return new Promise((resolve) => {
     const video = document.createElement('video')
-    video.src = src
+    video.src = actualSrc
     video.preload = 'auto'
     video.muted = true
     video.playsInline = true
 
-    activePreloaders.set(src, video)
+    activePreloaders.set(actualSrc, video)
 
     const cleanup = () => {
       video.removeEventListener('canplaythrough', onCanPlay)
       video.removeEventListener('loadeddata', onCanPlay)
       video.removeEventListener('error', onError)
-      activePreloaders.delete(src)
+      activePreloaders.delete(actualSrc)
     }
 
     const onCanPlay = () => {
-      loadedVideos.add(src)
+      loadedVideos.add(actualSrc)
       cleanup()
-      if (src === '/videos/loop01.mp4') {
+      if (baseSrc.includes('loop01')) {
         notifyListeners(true)
       }
       resolve(true)
@@ -69,14 +89,15 @@ export async function startSequentialPreload() {
   if (heroSuccess) {
     notifyListeners(true)
   }
-  // Запускаем фоновую тихую подгрузку первого пролёта (transit12.mp4) и 2-й сцены
+  // Запускаем фоновую тихую подгрузку первого пролёта (transit12) и 2-й сцены (loop02)
   preloadVideo('/videos/transit12.mp4')
   preloadVideo('/videos/loop02.mp4')
 }
 
 /** Динамический приоритетный подхват следующего видео при смене сцен или клике по меню */
 export function prioritizeVideoLoad(src: string) {
-  if (!loadedVideos.has(src)) {
+  const actualSrc = getPreferredVideoSrc(src)
+  if (!loadedVideos.has(actualSrc)) {
     preloadVideo(src)
   }
 }

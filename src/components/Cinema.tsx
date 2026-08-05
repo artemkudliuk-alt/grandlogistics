@@ -424,7 +424,7 @@ export function Cinema() {
             muted
             playsInline
             loop={step.kind === 'loop'}
-            preload={i < 2 ? 'auto' : 'metadata'}
+            preload="auto"
           >
             <source src={step.src.replace('.mp4', '_mobile.webm')} type="video/webm" />
             <source src={step.src.replace('.mp4', '_mobile.mp4')} type="video/mp4" />
