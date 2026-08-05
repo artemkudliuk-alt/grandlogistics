@@ -1,0 +1,133 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    --primary: 240 5.9% 10%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 240 5.9% 10%;
+    --radius: 0.625rem;
+  }
+
+  html, body {
+    -webkit-font-smoothing: antialiased !important;
+    -moz-osx-font-smoothing: grayscale !important;
+    text-rendering: optimizeLegibility !important;
+    font-smooth: always !important;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  /* Четкое векторное сглаживание шрифтов поверх видео */
+  h1, h2, h3, h4, h5, h6, p, span, button, input, select, label {
+    -webkit-font-smoothing: antialiased !important;
+    -moz-osx-font-smoothing: grayscale !important;
+    text-rendering: geometricPrecision !important;
+    font-smooth: always !important;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Мягкое появление шагов и элементов квиза */
+@keyframes quizStepIn {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.quiz-step-in {
+  animation: quizStepIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Лёгкое параллакс-появление при скролле (белые секции) — медленно и спокойно */
+.reveal-scroll {
+  opacity: 0;
+  transform: translateY(36px);
+  transition:
+    opacity 1s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 1s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+.reveal-scroll.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Уважение к prefers-reduced-motion: оставляем только мягкие fade */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+.custom-mobile-scroll {
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(124, 194, 72, 0.4) transparent;
+}
+.custom-mobile-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-mobile-scroll::-webkit-scrollbar-thumb {
+  background: rgba(124, 194, 72, 0.4);
+  border-radius: 4px;
+}
+
+/* Transitions.dev Motion Tokens */
+:root {
+  --duration-stagger: 40ms;
+  --duration-micro: 80ms;
+  --duration-quick: 150ms;
+  --duration-fast: 250ms;
+  --duration-medium: 350ms;
+  --duration-slow: 400ms;
+  --duration-very-slow: 500ms;
+  --ease-smooth-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: ease-in-out;
+  --distance-medium: 12px;
+}
+
+.t-texts-reveal {
+  opacity: 0;
+  transform: translateY(var(--distance-medium));
+  transition: opacity var(--duration-medium) var(--ease-smooth-out),
+              transform var(--duration-medium) var(--ease-smooth-out);
+}
+.t-texts-reveal.is-revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
