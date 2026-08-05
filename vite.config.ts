@@ -3,6 +3,7 @@ import react from "@vitejs/plugin-react"
 import { defineConfig } from "vite"
 import { inspectAttr } from 'kimi-plugin-inspect-react'
 import { ViteImageOptimizer } from 'vite-plugin-image-optimizer'
+import { visualizer } from 'rollup-plugin-visualizer'
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -15,6 +16,12 @@ export default defineConfig({
       jpeg: { quality: 85 },
       webp: { quality: 85 },
       avif: { quality: 80 },
+    }),
+    visualizer({
+      filename: 'dist/stats.html',
+      open: false,
+      gzipSize: true,
+      brotliSize: true,
     }),
   ],
   server: {
