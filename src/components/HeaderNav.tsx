@@ -108,26 +108,26 @@ export function HeaderNav({ lang, onToggleLang, onNavigateQuiz, mounted = true }
 
           {/* Правая часть: UK/EN + CTA */}
           <div className="shrink-0 pl-6 border-l border-white/15 flex items-center gap-4">
-            {/* Language Toggle — два флага: активный яркий, неактивный тёмный */}
+            {/* Language Toggle — два флага SVG: активный яркий, неактивный тёмный */}
             <div className="flex items-center gap-1.5">
               <button
                 onClick={lang === 'EN' ? onToggleLang : undefined}
-                className={`pointer-events-auto cursor-pointer text-lg leading-none transition-all duration-200 ${
-                  lang === 'UK' ? 'opacity-100 scale-110 drop-shadow-[0_0_6px_rgba(255,255,255,0.8)]' : 'opacity-25 grayscale hover:opacity-60 hover:grayscale-0'
+                className={`pointer-events-auto cursor-pointer transition-all duration-200 rounded-sm overflow-hidden ${
+                  lang === 'UK' ? 'opacity-100 scale-110 ring-1 ring-white/40' : 'opacity-25 grayscale hover:opacity-60 hover:grayscale-0'
                 }`}
                 title="Українська"
               >
-                🇺🇦
+                <img src="/flags/ua.svg" alt="UA" className="w-6 h-4 object-cover" />
               </button>
               <span className="text-white/20 text-xs">/</span>
               <button
                 onClick={lang === 'UK' ? onToggleLang : undefined}
-                className={`pointer-events-auto cursor-pointer text-lg leading-none transition-all duration-200 ${
-                  lang === 'EN' ? 'opacity-100 scale-110 drop-shadow-[0_0_6px_rgba(255,255,255,0.8)]' : 'opacity-25 grayscale hover:opacity-60 hover:grayscale-0'
+                className={`pointer-events-auto cursor-pointer transition-all duration-200 rounded-sm overflow-hidden ${
+                  lang === 'EN' ? 'opacity-100 scale-110 ring-1 ring-white/40' : 'opacity-25 grayscale hover:opacity-60 hover:grayscale-0'
                 }`}
                 title="English"
               >
-                🇬🇧
+                <img src="/flags/gb.svg" alt="EN" className="w-6 h-4 object-cover" />
               </button>
             </div>
 
