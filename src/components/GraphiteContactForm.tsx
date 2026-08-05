@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { useScrollReveal } from '../hooks/useScrollReveal'
-import { SitePills } from './SitePills'
 
 export function GraphiteContactForm() {
   const revealRef = useScrollReveal<HTMLDivElement>()
@@ -256,10 +255,6 @@ export function GraphiteContactForm() {
 
         </div>
 
-        {/* Пилюли-маршрут по 10 экранам */}
-        <div className="hidden md:flex justify-center mt-6">
-          <SitePills activeTarget="s4" />
-        </div>
 
       </div>
     </div>

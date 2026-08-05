@@ -7,7 +7,6 @@ import { InfoChip } from './InfoChip'
 import { InfoModal } from './InfoModal'
 import { CalcFormContent } from './CalcFormContent'
 import { QuizContent } from './QuizContent'
-import { SitePills } from './SitePills'
 import { Calculator } from 'lucide-react'
 
 interface Props {
@@ -214,13 +213,6 @@ export function UILayer({ scene, isTransit = false }: Props) {
         </div>
       </div>
 
-      {/* Пилюли-маршрут по 10 экранам */}
-      <div
-        className="hidden md:flex items-end justify-center px-4 sm:px-8 lg:px-16 xl:px-20 pb-6 transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]"
-        style={anim(880)}
-      >
-        <SitePills activeScene={scene} />
-      </div>
 
       {/* Поп-ап с деталями чипса */}
       <InfoModal

@@ -8,6 +8,27 @@ interface HeaderNavProps {
   mounted?: boolean
 }
 
+// 10 навигационных пунктов из SitePills — теперь в шапке
+interface NavPill {
+  label: string
+  sceneNum?: number
+  subScene?: string
+  targetId?: string
+}
+
+const SITE_NAV: NavPill[] = [
+  { label: '01 Головна', sceneNum: 1 },
+  { label: '02 Послуги', sceneNum: 2 },
+  { label: '03 Китай', sceneNum: 3 },
+  { label: '04 Карта', targetId: 's1' },
+  { label: '05 Вантажі', subScene: 'scene4', targetId: 's2' },
+  { label: '06 КНР', subScene: 'scene5', targetId: 's2' },
+  { label: '07 Переваги', subScene: 'scene6', targetId: 's2' },
+  { label: '08 Контакти', subScene: 'scene7', targetId: 's2' },
+  { label: '09 Схема', targetId: 's3' },
+  { label: '10 Заявка', targetId: 's4' },
+]
+
 export function HeaderNav({ lang, onToggleLang, onNavigateQuiz, mounted = true }: HeaderNavProps) {
   const [mobileOpen, setMobileOpen] = useState(false)
   const f = FORM_TEXTS[lang]
@@ -34,20 +55,89 @@ export function HeaderNav({ lang, onToggleLang, onNavigateQuiz, mounted = true }
     }
   }
 
+  const handleNavPill = (item: NavPill) => {
+    if (item.sceneNum) {
+      window.dispatchEvent(new CustomEvent('nav-cinema', { detail: item.sceneNum }))
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      return
+    }
+    if (item.subScene) {
+      window.dispatchEvent(new CustomEvent('nav-hero4', { detail: item.subScene }))
+    }
+    if (item.targetId) {
+      const el = document.getElementById(item.targetId)
+      if (el) el.scrollIntoView({ behavior: 'smooth' })
+    }
+  }
+
   return (
     <>
       <header
-        className="relative z-40 w-full px-4 py-3 flex items-center justify-between transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] md:mx-auto md:mt-4 md:w-[96%] md:max-w-7xl md:rounded-full md:border md:border-white/15 md:bg-black/40 md:backdrop-blur-2xl md:shadow-[0_8px_32px_rgba(0,0,0,0.4)] md:px-10 md:py-3.5"
+        className="relative z-40 w-full border-b border-white/10 bg-black/50 backdrop-blur-2xl shadow-[0_4px_24px_rgba(0,0,0,0.5)] transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]"
         style={{
           opacity: mounted ? 1 : 0,
           transform: mounted ? 'translateY(0)' : 'translateY(-20px)',
           transitionDelay: '0ms',
         }}
       >
-        {/* --- MOBILE LAYOUT (< md) --- */}
+        {/* Одна строка на десктопе: лого | nav по всей ширине | lang + CTA */}
+        <div className="hidden md:flex items-center gap-0 h-14 px-6 xl:px-10">
 
-        {/* Left: Burger Menu Button */}
-        <div className="flex items-center md:hidden z-10">
+          {/* Логотип */}
+          <div className="shrink-0 pr-6 border-r border-white/15">
+            <img
+              src="/logo.png"
+              alt="Grand Logistics"
+              className="h-8 w-auto object-contain cursor-pointer transition-transform hover:scale-105"
+              onClick={() => handleNavClick('top')}
+            />
+          </div>
+
+          {/* 10 навигационных пунктов — по всей оставшейся ширине */}
+          <nav className="flex-1 flex items-center justify-between px-4 xl:px-6">
+            {SITE_NAV.map((item) => (
+              <button
+                key={item.label}
+                onClick={() => handleNavPill(item)}
+                className="pointer-events-auto cursor-pointer text-[11px] xl:text-xs font-semibold text-white/70 hover:text-white transition-colors duration-200 tracking-wide whitespace-nowrap px-1"
+              >
+                {item.label}
+              </button>
+            ))}
+          </nav>
+
+          {/* Правая часть: UK/EN + CTA */}
+          <div className="shrink-0 pl-6 border-l border-white/15 flex items-center gap-4">
+            {/* Language Toggle */}
+            <button
+              onClick={onToggleLang}
+              className="pointer-events-auto cursor-pointer text-[11px] font-bold text-white/60 hover:text-white transition-colors duration-200 flex items-center gap-1"
+            >
+              <span className={lang === 'UK' ? 'text-[#7CC248]' : ''}>{lang === 'UK' ? '🇺🇦 UA' : '🇬🇧 EN'}</span>
+            </button>
+
+            {/* CTA */}
+            <style>{`
+              @keyframes floatingCta {
+                0%, 100% { box-shadow: 0 0 16px rgba(124,194,72,0.4); }
+                50% { box-shadow: 0 6px 24px rgba(124,194,72,0.7); }
+              }
+              .anim-floating-cta { animation: floatingCta 3.5s ease-in-out infinite; }
+            `}</style>
+            <button
+              onClick={onNavigateQuiz}
+              className="pointer-events-auto rounded-full px-5 py-2 text-xs font-bold text-white transition-all duration-300 hover:scale-105 hover:bg-[#88d450] active:scale-95 flex items-center gap-1.5 cursor-pointer anim-floating-cta"
+              style={{ backgroundColor: ACCENT }}
+            >
+              <span className="inline-block h-1.5 w-1.5 rounded-full bg-white" />
+              <span>{f.headerCta}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* === MOBILE === */}
+        <div className="flex md:hidden items-center justify-between px-4 py-3">
+          {/* Burger */}
           <button
             onClick={() => setMobileOpen(true)}
             className="pointer-events-auto p-2 rounded-xl bg-white/10 border border-white/20 text-white backdrop-blur-md transition-all hover:bg-white/20 active:scale-95 flex items-center justify-center cursor-pointer"
@@ -57,64 +147,18 @@ export function HeaderNav({ lang, onToggleLang, onNavigateQuiz, mounted = true }
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-        </div>
 
-        {/* Center: Logo (Centered on mobile via absolute positioning, left-aligned on desktop) */}
-        <div className="md:static absolute left-1/2 -translate-x-1/2 md:translate-x-0 flex items-center justify-center z-10">
+          {/* Logo centered */}
           <img
             src="/logo.png"
             alt="Grand Logistics"
-            className="h-8 sm:h-10 w-auto object-contain cursor-pointer transition-transform hover:scale-105"
+            className="h-8 w-auto object-contain cursor-pointer transition-transform hover:scale-105"
             onClick={() => handleNavClick('top')}
           />
+
+          {/* Spacer */}
+          <div className="w-10" />
         </div>
-
-        {/* --- DESKTOP NAV LINKS (md+) --- */}
-        <nav className="hidden md:flex items-center gap-6 lg:gap-8 xl:gap-10 text-sm font-semibold text-white/95">
-          {navItems.slice(1).map((item) => (
-            <span
-              key={item.label}
-              onClick={() => handleNavClick(item.target)}
-              className="pointer-events-auto cursor-pointer hover:text-[#7CC248] hover:scale-105 transition-all duration-300 tracking-tight"
-            >
-              {item.label}
-            </span>
-          ))}
-
-          {/* Language Toggle UK / EN */}
-          <button
-            onClick={onToggleLang}
-            className="pointer-events-auto cursor-pointer rounded-full border border-white/35 border-t-white/50 bg-white/10 backdrop-blur-xl px-4 py-1.5 text-xs font-bold text-white shadow-[0_4px_20px_rgba(0,0,0,0.3),inset_0_1px_1px_rgba(255,255,255,0.3)] transition-all duration-300 hover:bg-white/20 hover:scale-105 active:scale-95 flex items-center gap-1.5"
-          >
-            <span className={lang === 'UK' ? 'text-[#7CC248] font-extrabold' : 'text-white/60'}>UK</span>
-            <span className="text-white/30 font-light">/</span>
-            <span className={lang === 'EN' ? 'text-[#7CC248] font-extrabold' : 'text-white/60'}>EN</span>
-          </button>
-        </nav>
-
-        {/* Right side: Desktop CTA button & language selector (Hidden on mobile) */}
-        <div className="hidden md:flex items-center gap-3 z-10">
-          <style>{`
-            @keyframes floatingCta {
-              0%, 100% { transform: translateY(0px); box-shadow: 0 0 20px rgba(124,194,72,0.4); }
-              50% { transform: translateY(-4px); box-shadow: 0 10px 30px rgba(124,194,72,0.7); }
-            }
-            .anim-floating-cta {
-              animation: floatingCta 3.5s ease-in-out infinite;
-            }
-          `}</style>
-          <button
-            onClick={onNavigateQuiz}
-            className="pointer-events-auto rounded-full px-6 py-2.5 text-sm font-bold text-white transition-all duration-300 hover:scale-105 hover:bg-[#88d450] active:scale-95 flex items-center gap-2 cursor-pointer anim-floating-cta"
-            style={{ backgroundColor: ACCENT }}
-          >
-            <span className="inline-block h-2 w-2 rounded-full bg-white shadow-[0_0_6px_#fff]" />
-            <span>{f.headerCta}</span>
-          </button>
-        </div>
-
-        {/* Mobile Right Spacer (Balances left burger button to keep logo perfectly centered) */}
-        <div className="w-10 md:hidden pointer-events-none" />
       </header>
 
       {/* --- BURGER MENU OVERLAY / DRAWER FOR MOBILE --- */}

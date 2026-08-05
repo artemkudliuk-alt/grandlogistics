@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { FileText, Calculator, ShieldCheck, Container, Truck, type LucideIcon } from 'lucide-react'
 import { useLang } from '../config/lang'
 import { useScrollReveal } from '../hooks/useScrollReveal'
-import { SitePills } from './SitePills'
 
 interface Step {
   num: string
@@ -175,10 +174,6 @@ export function WorkStepsTimeline() {
           })}
         </div>
 
-        {/* Пилюли-маршрут по 10 экранам */}
-        <div className="hidden md:flex justify-center mt-12">
-          <SitePills activeTarget="s3" />
-        </div>
 
       </div>
     </div>
