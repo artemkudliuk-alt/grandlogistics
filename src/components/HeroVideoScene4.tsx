@@ -518,7 +518,7 @@ export function HeroVideoScene4() {
       {/* 1. Видео-слой 4-й сцены (loop04.mp4) */}
       <video
         ref={video4Ref}
-        src="/videos/loop04.mp4"
+        poster="/videos/loop04_poster.jpg"
         className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ease-in-out"
         style={{
           opacity: currentStep === 'scene4' || prevStep === 'scene4' ? 1 : 0,
@@ -527,12 +527,17 @@ export function HeroVideoScene4() {
         muted
         playsInline
         loop
-      />
+        preload="metadata"
+      >
+        <source src="/videos/loop04_mobile.webm" type="video/webm" />
+        <source src="/videos/loop04_mobile.mp4" type="video/mp4" />
+        <source src="/videos/loop04.mp4" type="video/mp4" />
+      </video>
 
       {/* 2. Видео-слой 3D пролета 4-5 (transit45.mp4) */}
       <video
         ref={transit45Ref}
-        src="/videos/transit45.mp4"
+        poster="/videos/transit45_poster.jpg"
         className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ease-in-out"
         style={{
           opacity: currentStep === 'transit45' || prevStep === 'transit45' ? 1 : 0,
@@ -540,13 +545,17 @@ export function HeroVideoScene4() {
         }}
         muted
         playsInline
-        preload="auto"
-      />
+        preload="metadata"
+      >
+        <source src="/videos/transit45_mobile.webm" type="video/webm" />
+        <source src="/videos/transit45_mobile.mp4" type="video/mp4" />
+        <source src="/videos/transit45.mp4" type="video/mp4" />
+      </video>
 
       {/* 3. Видео-слой 5-й сцены (loop05.mp4) */}
       <video
         ref={video5Ref}
-        src="/videos/loop05.mp4"
+        poster="/videos/loop05_poster.jpg"
         className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ease-in-out"
         style={{
           opacity: currentStep === 'scene5' || prevStep === 'scene5' ? 1 : 0,
@@ -555,12 +564,17 @@ export function HeroVideoScene4() {
         muted
         playsInline
         loop
-      />
+        preload="metadata"
+      >
+        <source src="/videos/loop05_mobile.webm" type="video/webm" />
+        <source src="/videos/loop05_mobile.mp4" type="video/mp4" />
+        <source src="/videos/loop05.mp4" type="video/mp4" />
+      </video>
 
       {/* 4. Видео-слой 3D пролета 5-6 (transit56.mp4) */}
       <video
         ref={transit56Ref}
-        src="/videos/transit56.mp4"
+        poster="/videos/transit56_poster.jpg"
         className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ease-in-out"
         style={{
           opacity: currentStep === 'transit56' || prevStep === 'transit56' ? 1 : 0,
@@ -568,13 +582,17 @@ export function HeroVideoScene4() {
         }}
         muted
         playsInline
-        preload="auto"
-      />
+        preload="metadata"
+      >
+        <source src="/videos/transit56_mobile.webm" type="video/webm" />
+        <source src="/videos/transit56_mobile.mp4" type="video/mp4" />
+        <source src="/videos/transit56.mp4" type="video/mp4" />
+      </video>
 
       {/* 5. Видео-слой 6-й сцены (loop06.mp4) */}
       <video
         ref={video6Ref}
-        src="/videos/loop06.mp4"
+        poster="/videos/loop06_poster.jpg"
         className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ease-in-out"
         style={{
           opacity: currentStep === 'scene6' || prevStep === 'scene6' ? 1 : 0,
@@ -583,12 +601,17 @@ export function HeroVideoScene4() {
         muted
         playsInline
         loop
-      />
+        preload="metadata"
+      >
+        <source src="/videos/loop06_mobile.webm" type="video/webm" />
+        <source src="/videos/loop06_mobile.mp4" type="video/mp4" />
+        <source src="/videos/loop06.mp4" type="video/mp4" />
+      </video>
 
       {/* 6. Видео-слой 3D пролета 6-7 (transit67.mp4) */}
       <video
         ref={transit67Ref}
-        src="/videos/transit67.mp4"
+        poster="/videos/transit67_poster.jpg"
         className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ease-in-out"
         style={{
           opacity: currentStep === 'transit67' || prevStep === 'transit67' ? 1 : 0,
@@ -596,13 +619,17 @@ export function HeroVideoScene4() {
         }}
         muted
         playsInline
-        preload="auto"
-      />
+        preload="metadata"
+      >
+        <source src="/videos/transit67_mobile.webm" type="video/webm" />
+        <source src="/videos/transit67_mobile.mp4" type="video/mp4" />
+        <source src="/videos/transit67.mp4" type="video/mp4" />
+      </video>
 
       {/* 7. Видео-слой 7-й сцены (loop07.mp4) */}
       <video
         ref={video7Ref}
-        src="/videos/loop07.mp4"
+        poster="/videos/loop07_poster.jpg"
         className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ease-in-out"
         style={{
           opacity: currentStep === 'scene7' || prevStep === 'scene7' ? 1 : 0,
@@ -611,7 +638,12 @@ export function HeroVideoScene4() {
         muted
         playsInline
         loop
-      />
+        preload="metadata"
+      >
+        <source src="/videos/loop07_mobile.webm" type="video/webm" />
+        <source src="/videos/loop07_mobile.mp4" type="video/mp4" />
+        <source src="/videos/loop07.mp4" type="video/mp4" />
+      </video>
 
 
 

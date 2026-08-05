@@ -415,7 +415,6 @@ export function Cinema() {
           <video
             key={`${step.src}-${i}`}
             ref={(el) => { videoRefs.current[i] = el }}
-            src={step.src}
             poster={step.src.replace('.mp4', '_poster.jpg')}
             className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ease-in-out"
             style={{
@@ -426,7 +425,11 @@ export function Cinema() {
             playsInline
             loop={step.kind === 'loop'}
             preload={i < 2 ? 'auto' : 'metadata'}
-          />
+          >
+            <source src={step.src.replace('.mp4', '_mobile.webm')} type="video/webm" />
+            <source src={step.src.replace('.mp4', '_mobile.mp4')} type="video/mp4" />
+            <source src={step.src} type="video/mp4" />
+          </video>
         )
       })}
 
