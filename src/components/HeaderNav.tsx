@@ -176,12 +176,36 @@ export function HeaderNav({ lang, onToggleLang, onNavigateQuiz, mounted = true }
         </div>
       </header>
 
+
       {/* --- BURGER MENU OVERLAY / DRAWER FOR MOBILE --- */}
       {mobileOpen && (
-        <div className="fixed inset-0 z-50 flex flex-col bg-[#0b1019]/95 backdrop-blur-3xl text-white animate-[fadeIn_0.3s_ease-out] p-6 overflow-y-auto">
-          {/* Drawer Top Header */}
-          <div className="flex items-center justify-between pb-6 border-b border-white/15">
+        <div className="fixed inset-0 z-50 flex flex-col bg-[#0b1019]/97 backdrop-blur-3xl text-white animate-[fadeIn_0.3s_ease-out] overflow-y-auto">
+
+          {/* Drawer Header */}
+          <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
             <img src="/logo.png" alt="Grand Logistics" className="h-8 w-auto" />
+            {/* Флаги в шапке дровера */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={lang === 'EN' ? onToggleLang : undefined}
+                className={`cursor-pointer transition-all duration-200 rounded-sm overflow-hidden ${
+                  lang === 'UK' ? 'opacity-100 scale-110 ring-1 ring-white/40' : 'opacity-30 grayscale'
+                }`}
+                title="Українська"
+              >
+                <img src="/flags/ua.svg" alt="UA" className="w-7 h-5 object-cover" />
+              </button>
+              <span className="text-white/20 text-sm">/</span>
+              <button
+                onClick={lang === 'UK' ? onToggleLang : undefined}
+                className={`cursor-pointer transition-all duration-200 rounded-sm overflow-hidden ${
+                  lang === 'EN' ? 'opacity-100 scale-110 ring-1 ring-white/40' : 'opacity-30 grayscale'
+                }`}
+                title="English"
+              >
+                <img src="/flags/gb.svg" alt="EN" className="w-7 h-5 object-cover" />
+              </button>
+            </div>
             <button
               onClick={() => setMobileOpen(false)}
               className="p-2.5 rounded-full bg-white/10 border border-white/20 text-white hover:bg-white/20 active:scale-95 transition-all"
@@ -193,56 +217,41 @@ export function HeaderNav({ lang, onToggleLang, onNavigateQuiz, mounted = true }
             </button>
           </div>
 
-          {/* Drawer Navigation Links */}
-          <div className="flex flex-col gap-4 py-8">
-            <div className="text-[11px] font-extrabold uppercase tracking-widest text-[#7CC248] mb-1">
+          {/* 10 навигационных пунктов */}
+          <div className="flex-1 flex flex-col px-6 py-6 gap-0">
+            <div className="text-[10px] font-extrabold uppercase tracking-widest text-[#7CC248] mb-4">
               Навігація сайту
             </div>
-            {navItems.map((item) => (
+            {SITE_NAV.map((item) => (
               <button
                 key={item.label}
-                onClick={() => handleNavClick(item.target)}
-                className="text-left text-xl font-extrabold text-white hover:text-[#7CC248] transition-colors py-2 border-b border-white/5 flex items-center justify-between group"
+                onClick={() => { setMobileOpen(false); handleNavPill(item) }}
+                className="text-left text-xl font-bold text-white hover:text-[#7CC248] transition-colors py-3.5 border-b border-white/8 flex items-center justify-between group"
               >
                 <span>{item.label}</span>
-                <span className="text-white/30 group-hover:text-[#7CC248] transition-colors">➔</span>
+                <span className="text-white/25 group-hover:text-[#7CC248] transition-colors text-base">➔</span>
               </button>
             ))}
           </div>
 
-          {/* Language & CTA in Drawer */}
-          <div className="mt-auto pt-6 border-t border-white/15 space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-white/60 font-medium">Мова інтерфейсу / Language:</span>
-              <button
-                onClick={onToggleLang}
-                className="rounded-full border border-white/35 bg-white/10 px-4 py-1.5 text-xs font-bold text-white flex items-center gap-1.5"
-              >
-                <span className={lang === 'UK' ? 'text-[#7CC248] font-extrabold' : 'text-white/60'}>UK</span>
-                <span className="text-white/30">/</span>
-                <span className={lang === 'EN' ? 'text-[#7CC248] font-extrabold' : 'text-white/60'}>EN</span>
-              </button>
-            </div>
-
+          {/* Нижняя часть: CTA + контакты */}
+          <div className="px-6 py-6 border-t border-white/10 space-y-3">
             <button
-              onClick={() => {
-                setMobileOpen(false)
-                onNavigateQuiz()
-              }}
-              className="w-full rounded-2xl py-4 text-sm font-extrabold text-white shadow-xl flex items-center justify-center gap-2 cursor-pointer"
+              onClick={() => { setMobileOpen(false); onNavigateQuiz() }}
+              className="w-full rounded-2xl py-4 text-sm font-extrabold text-white shadow-xl flex items-center justify-center gap-2 cursor-pointer active:scale-95 transition-transform"
               style={{ backgroundColor: ACCENT }}
             >
+              <span className="inline-block h-2 w-2 rounded-full bg-white" />
               <span>{f.headerCta}</span>
             </button>
 
-            {/* Quick Contact Links */}
-            <div className="flex items-center justify-center gap-4 pt-2 text-xs text-white/70">
-              <a href="https://t.me/grand_logistics_bot" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-[#229ED9]">
-                <span>Telegram</span>
+            <div className="flex items-center justify-center gap-4 pt-1 text-xs text-white/60">
+              <a href="https://t.me/grand_logistics_bot" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-[#229ED9] hover:text-[#44b8f0] transition-colors">
+                Telegram
               </a>
               <span>•</span>
-              <a href="tel:+380665715295" className="text-emerald-400">
-                <span>+38 066 571-52-95</span>
+              <a href="tel:+380665715295" className="text-emerald-400 hover:text-emerald-300 transition-colors">
+                +38 066 571-52-95
               </a>
             </div>
           </div>
