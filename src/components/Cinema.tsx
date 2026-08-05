@@ -416,6 +416,7 @@ export function Cinema() {
             key={`${step.src}-${i}`}
             ref={(el) => { videoRefs.current[i] = el }}
             src={step.src}
+            poster={step.src.replace('.mp4', '_poster.jpg')}
             className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ease-in-out"
             style={{
               opacity: isVisible ? 1 : 0,
@@ -424,7 +425,7 @@ export function Cinema() {
             muted
             playsInline
             loop={step.kind === 'loop'}
-            preload={i < 4 ? 'auto' : 'metadata'}
+            preload={i < 2 ? 'auto' : 'metadata'}
           />
         )
       })}
