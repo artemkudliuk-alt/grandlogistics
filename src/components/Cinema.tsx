@@ -55,11 +55,26 @@ export function Cinema() {
     dimTimersRef.current.push(t)
   }, [clearDimTimers, dimTo])
 
-  // Первое появление: спокойный выход из затемнения
+  // Первое появление: спокойный выход из затемнения и гарантированный запуск loop01 за прелоадером
   useEffect(() => {
     const id = requestAnimationFrame(() =>
       requestAnimationFrame(() => dimTo(0.35, 2000))
     )
+
+    // Сигнал прелоадеру: видео первого экрана УЖЕ проигрывается в GPU прямо за прелоадером
+    const v0 = videoRefs.current[0]
+    if (v0) {
+      const notifyReady = () => {
+        window.dispatchEvent(new CustomEvent('hero-video-playing'))
+      }
+      if (!v0.paused && v0.currentTime > 0) {
+        notifyReady()
+      } else {
+        v0.addEventListener('playing', notifyReady, { once: true })
+        v0.play().catch(() => {})
+      }
+    }
+
     return () => cancelAnimationFrame(id)
   }, [dimTo])
 

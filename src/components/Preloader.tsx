@@ -13,14 +13,20 @@ export function Preloader() {
     // 1. Запускаем систему пошаговой загрузки видео
     startSequentialPreload()
 
-    // 2. Слушаем 100% сигнал готовности буфера первого экрана (loop01)
+    // 2. Слушаем сигнал: видео УЖЕ физически проигрывается в GPU на экране
+    const onHeroPlaying = () => {
+      heroLoaded = true
+    }
+    window.addEventListener('hero-video-playing', onHeroPlaying)
+
+    // 3. Слушаем прелоадер кэша
     const unsubscribe = subscribePreloaderProgress((_pct, heroReady) => {
       if (heroReady) {
         heroLoaded = true
       }
     })
 
-    // 3. Плавный тикающий таймер прогресса (спокойное движение 0% -> 95%)
+    // 4. Плавный тикающий таймер прогресса (спокойное движение 0% -> 95%)
     const interval = setInterval(() => {
       if (!heroLoaded) {
         // Плавно подтягиваем процент до 95% без прыжков
@@ -28,11 +34,11 @@ export function Preloader() {
           currentPct += 1
           setProgress(currentPct)
         }
-        // На 95% спокойно ждём полной готовности loop01
+        // На 95% спокойно ждём реального старта видео кадров
       } else {
-        // loop01 полностью готов! Доводим 95% -> 100% и открываем сайт
+        // Видео 1-го экрана уже в действии! Завершаем 95% -> 100% и убираем занавес
         if (currentPct < 100) {
-          currentPct += 3
+          currentPct += 5
           if (currentPct > 100) currentPct = 100
           setProgress(currentPct)
         } else {
@@ -40,7 +46,7 @@ export function Preloader() {
           setTimeout(() => {
             setIsReady(true)
             setTimeout(() => setShouldRender(false), 700)
-          }, 200)
+          }, 150)
         }
       }
     }, 35)
@@ -53,6 +59,7 @@ export function Preloader() {
     return () => {
       clearInterval(interval)
       clearTimeout(fallbackTimer)
+      window.removeEventListener('hero-video-playing', onHeroPlaying)
       unsubscribe()
     }
   }, [])
