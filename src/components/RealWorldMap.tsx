@@ -173,17 +173,32 @@ export function RealWorldMap() {
   useEffect(() => {
     if (!mapContainerRef.current || mapInstanceRef.current) return
 
-    // scrollWheelZoom: false — скролл мыши НЕ зумит карту
-    const map = L.map(mapContainerRef.current, {
-      center: [45.0, 32.0],
-      zoom: 4,
-      minZoom: 2,
-      maxZoom: 10,
-      zoomControl: false,
-      scrollWheelZoom: false,
-    })
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !mapInstanceRef.current) {
+          observer.disconnect()
+          initMap()
+        }
+      },
+      { rootMargin: '300px' }
+    )
 
-    mapInstanceRef.current = map
+    observer.observe(mapContainerRef.current)
+
+    function initMap() {
+      if (!mapContainerRef.current || mapInstanceRef.current) return
+
+      // scrollWheelZoom: false — скролл мыши НЕ зумит карту
+      const map = L.map(mapContainerRef.current, {
+        center: [45.0, 32.0],
+        zoom: 4,
+        minZoom: 2,
+        maxZoom: 10,
+        zoomControl: false,
+        scrollWheelZoom: false,
+      })
+
+      mapInstanceRef.current = map
 
     // Тёмные векторные тайлы CartoDB Dark Matter
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
@@ -328,17 +343,15 @@ export function RealWorldMap() {
     }, 200)
 
     const resizeObserver = new ResizeObserver(() => {
-      map.invalidateSize()
+      if (map) map.invalidateSize()
     })
     if (mapContainerRef.current) {
       resizeObserver.observe(mapContainerRef.current)
     }
+    }
 
     return () => {
-      resizeObserver.disconnect()
-      container.removeEventListener('wheel', handleWheel)
-      container.removeEventListener('touchstart', handleTouchStart)
-      container.removeEventListener('touchend', handleTouchEnd)
+      observer.disconnect()
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove()
         mapInstanceRef.current = null

@@ -83,15 +83,21 @@ export function preloadVideo(baseSrc: string): Promise<boolean> {
   })
 }
 
-/** Подгружает Hero-видео для первого экрана и мгновенно открывает сайт */
+/** Подгружает связку Stage 1 (Loop01 + Transit12 + Loop02) в Прелоадере и гарантирует 0ms переход на 2-ю сцену */
 export async function startSequentialPreload() {
-  const heroSuccess = await preloadVideo('/videos/loop01.mp4')
-  if (heroSuccess) {
-    notifyListeners(true)
-  }
-  // Запускаем фоновую тихую подгрузку первого пролёта (transit12) и 2-й сцены (loop02)
-  preloadVideo('/videos/transit12.mp4')
-  preloadVideo('/videos/loop02.mp4')
+  // Параллельно подгружаем ролики первого экрана, первого пролёта и второй сцены (~2.4 MB суммарно)
+  await Promise.all([
+    preloadVideo('/videos/loop01.mp4'),
+    preloadVideo('/videos/transit12.mp4'),
+    preloadVideo('/videos/loop02.mp4')
+  ])
+
+  // Сообщаем Прелоадеру, что первые 3 ключа на 100% готовы в оперативной памяти
+  notifyListeners(true)
+
+  // Stage 2: Тихо подгружаем в фоне следующую связку (transit23 + loop03)
+  preloadVideo('/videos/transit23.mp4')
+  preloadVideo('/videos/loop03.mp4')
 }
 
 /** Динамический приоритетный подхват следующего видео при смене сцен или клике по меню */
