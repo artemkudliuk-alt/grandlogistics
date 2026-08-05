@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { CINEMA_STEPS } from '../config/scenes'
 import { UILayer } from './UILayer'
-import { prioritizeVideoLoad } from '../utils/videoPreloader'
+import { prioritizeVideoLoad, preloadNextSceneVideos } from '../utils/videoPreloader'
 
 export function Cinema() {
   const videoRefs = useRef<(HTMLVideoElement | null)[]>([])
@@ -64,6 +64,11 @@ export function Cinema() {
   }, [dimTo])
 
   useEffect(() => () => clearDimTimers(), [clearDimTimers])
+
+  // Пошаговая смарт-подгрузка видео для следующей сцены
+  useEffect(() => {
+    preloadNextSceneVideos(scene)
+  }, [scene])
 
   // Запуск проигрывания видео (паузим все неактивные ролики для идеального 60fps без лагов)
   const playVideo = useCallback((idx: number) => {

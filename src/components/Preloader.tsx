@@ -35,13 +35,13 @@ export function Preloader() {
       }
     })
 
-    // Фолбэк на случай если сетевой запрос задерживается (максимум 3.5с)
+    // Фолбэк на случай задержки сети (максимум 2.2с для мгновенного входа)
     const fallbackTimer = setTimeout(() => {
       clearInterval(timer)
       setProgress(100)
       setIsReady(true)
-      setTimeout(() => setShouldRender(false), 700)
-    }, 3500)
+      setTimeout(() => setShouldRender(false), 600)
+    }, 2200)
 
     return () => {
       clearInterval(timer)
