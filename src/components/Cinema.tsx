@@ -234,7 +234,7 @@ export function Cinema() {
     }
   }, [runDimFade, setActiveStep])
 
-  // Слушатель глобальной навигации к кино-сценам
+  // Слушатель глобальной навигации к кино-сценам (с анимацией)
   useEffect(() => {
     const handleNav = (e: Event) => {
       const customEvent = e as CustomEvent<number>
@@ -245,6 +245,23 @@ export function Cinema() {
     window.addEventListener('nav-cinema', handleNav)
     return () => window.removeEventListener('nav-cinema', handleNav)
   }, [jumpToScene])
+
+  // Тихое переключение сцены — без анимации и без scrollTo(0).
+  // Используется мобильным меню для мгновенного снятия scroll-lock
+  // перед навигацией к #s1/#s2/#s3/#s4 секциям.
+  useEffect(() => {
+    const handleSilentNav = (e: Event) => {
+      const ev = e as CustomEvent<number>
+      if (!ev.detail || ev.detail < 1 || ev.detail > 3) return
+      const targetLoopIdx = (ev.detail - 1) * 2
+      setScene(ev.detail)
+      setActiveStep(targetLoopIdx)
+      const v = videoRefs.current[targetLoopIdx]
+      if (v) v.play().catch(() => {})
+    }
+    window.addEventListener('nav-cinema-silent', handleSilentNav)
+    return () => window.removeEventListener('nav-cinema-silent', handleSilentNav)
+  }, [setActiveStep])
 
   // Обработчик wheel и touch скролла для кино-части (первые 3 сцены)
   useEffect(() => {
@@ -381,6 +398,8 @@ export function Cinema() {
 
     // Блокировка вылезания карты на 1 и 2 экранах
     const handleWindowScroll = () => {
+      // Если мобильная навигация активна — не переписываем скролл
+      if ((window as unknown as Record<string, unknown>).__navBypass) return
       if (scene < 3 && window.scrollY > 5) {
         window.scrollTo(0, 0)
       }

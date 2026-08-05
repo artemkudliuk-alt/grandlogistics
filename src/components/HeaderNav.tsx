@@ -88,7 +88,7 @@ export function HeaderNav({ lang, onToggleLang, onNavigateQuiz, mounted = true }
     setMobileOpen(false)
 
     if (item.sceneNum) {
-      // Прямое переключение кино-сцен 1/2/3 — сразу
+      // Прямое переключение кино-сцен 1/2/3 — с анимацией dim-fade
       setTimeout(() => {
         window.dispatchEvent(new CustomEvent('nav-cinema', { detail: item.sceneNum }))
         window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -97,11 +97,14 @@ export function HeaderNav({ lang, onToggleLang, onNavigateQuiz, mounted = true }
     }
 
     // Для секций вне Cinema (Карта, Вантажі, КНР, Схема, Заявка):
-    // Cinema блокирует скролл вниз пока сцена 1 или 2.
-    // Сначала переключаем Cinema на сцену 3 (снимает scroll-lock),
-    // затем ждём анимацию и плавно скроллим к нужной секции.
+    // 1. Ставим bypass — Cinema не перехватывает scroll во время навигации
+    // 2. Тихо переключаем Cinema в scene 3 (снимает scroll-lock)
+    // 3. Скроллим к цели — позиция пересчитывается в момент скролла
+    // 4. Снимаем bypass после завершения smooth scroll (~1200ms)
+    ;(window as unknown as Record<string, unknown>).__navBypass = true
+
     setTimeout(() => {
-      window.dispatchEvent(new CustomEvent('nav-cinema', { detail: 3 }))
+      window.dispatchEvent(new CustomEvent('nav-cinema-silent', { detail: 3 }))
     }, 60)
 
     setTimeout(() => {
@@ -111,20 +114,30 @@ export function HeaderNav({ lang, onToggleLang, onNavigateQuiz, mounted = true }
       if (item.targetId) {
         const el = document.getElementById(item.targetId)
         if (el) {
-          const targetY = el.getBoundingClientRect().top + window.scrollY
+          // Для карты (#s1) header скрывается — offset не нужен
+          // Для остальных (#s2, #s3, #s4) компенсируем фиксированную шапку 56px
+          const headerOffset = item.targetId === 's1' ? 0 : 56
+          const targetY = el.getBoundingClientRect().top + window.scrollY - headerOffset
           window.scrollTo({ top: targetY, behavior: 'smooth' })
         }
       }
-    }, 820) // ждём dim-fade Cinema (~500ms) + буфер
+      // Снимаем bypass после завершения smooth scroll
+      setTimeout(() => {
+        ;(window as unknown as Record<string, unknown>).__navBypass = false
+      }, 1200)
+    }, 120) // 60ms silent dispatch + ~1 React render cycle
   }
 
   return (
     <>
       <header
-        className="fixed top-0 left-0 right-0 z-40 w-full border-b border-white/10 bg-black/60 backdrop-blur-2xl shadow-[0_4px_24px_rgba(0,0,0,0.5)] transition-all duration-300 ease-out"
+        className={`fixed top-0 left-0 right-0 z-40 w-full border-b border-white/10 bg-black/60 backdrop-blur-2xl shadow-[0_4px_24px_rgba(0,0,0,0.5)] transition-all duration-300 ease-out ${
+          // На мобильном — полностью скрываем шапку над картой (убирает «затемнённую плашку»)
+          isMapInView ? 'max-md:opacity-0 max-md:pointer-events-none max-md:-translate-y-full' : ''
+        }`}
         style={{
-          opacity: mounted ? 1 : 0,
-          transform: mounted ? 'translateY(0)' : 'translateY(-20px)',
+          opacity: mounted ? undefined : 0,
+          transform: mounted ? undefined : 'translateY(-20px)',
           transitionDelay: '0ms',
         }}
       >
