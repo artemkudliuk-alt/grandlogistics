@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { FORM_TEXTS, ACCENT } from '../config/scenes'
 
 interface HeaderNavProps {
@@ -32,6 +32,19 @@ const SITE_NAV: NavPill[] = [
 export function HeaderNav({ lang, onToggleLang, onNavigateQuiz, mounted = true }: HeaderNavProps) {
   const [mobileOpen, setMobileOpen] = useState(false)
   const f = FORM_TEXTS[lang]
+
+  // Блокируем переключение 3D сцен при открытом мобильном меню и отключаем скролл заднего фона
+  useEffect(() => {
+    if (mobileOpen) {
+      document.body.dataset.modalOpen = 'true'
+      const originalOverflow = document.body.style.overflow
+      document.body.style.overflow = 'hidden'
+      return () => {
+        delete document.body.dataset.modalOpen
+        document.body.style.overflow = originalOverflow
+      }
+    }
+  }, [mobileOpen])
 
   const handleNavClick = (target: string) => {
     setMobileOpen(false)
@@ -169,7 +182,13 @@ export function HeaderNav({ lang, onToggleLang, onNavigateQuiz, mounted = true }
 
       {/* --- BURGER MENU OVERLAY / DRAWER FOR MOBILE --- */}
       {mobileOpen && (
-        <div className="fixed inset-0 z-50 flex flex-col bg-[#0b1019]/97 backdrop-blur-3xl text-white animate-[fadeIn_0.3s_ease-out] overflow-y-auto">
+        <div
+          className="pointer-events-auto fixed inset-0 z-[100] flex flex-col bg-[#0b1019] text-white animate-[fadeIn_0.3s_ease-out] overflow-y-auto overscroll-contain"
+          onTouchStart={(e) => e.stopPropagation()}
+          onTouchMove={(e) => e.stopPropagation()}
+          onTouchEnd={(e) => e.stopPropagation()}
+          onWheel={(e) => e.stopPropagation()}
+        >
 
           {/* Drawer Header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
