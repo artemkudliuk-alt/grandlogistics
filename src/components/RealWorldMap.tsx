@@ -442,63 +442,10 @@ export function RealWorldMap() {
         </div>
       </div>
 
-      {/* ПРАВА ВЕРХНЯ НАВІГАЦІЯ ПО ВСІХ 10 ЕКРАНАХ (ДЕСКТОП - В ОДНУ СТРОЧКУ) */}
-      <div className={`hidden md:block absolute top-6 right-6 lg:top-8 lg:right-8 z-30 pointer-events-auto transition-all duration-200 ease-out ${
-        isMapVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'
-      }`}>
-        <div className="flex items-center gap-1.5 lg:gap-2 flex-nowrap p-1.5 rounded-full border border-white/15 bg-black/60 backdrop-blur-2xl shadow-2xl whitespace-nowrap">
-          {[
-            { label: '01 Головна', sceneNum: 1 },
-            { label: '02 Послуги', sceneNum: 2 },
-            { label: '03 Квіз', sceneNum: 3 },
-            { label: '04 Карта', targetId: 's1', active: true },
-            { label: '05 Вантажі', subScene: 'scene4', targetId: 's2' },
-            { label: '06 КНР Сервіс', subScene: 'scene5', targetId: 's2' },
-            { label: '07 Переваги', subScene: 'scene6', targetId: 's2' },
-            { label: '08 Контакти', subScene: 'scene7', targetId: 's2' },
-            { label: '09 Схема', targetId: 's3' },
-            { label: '10 Заявка', targetId: 's4' },
-          ].map((item) => {
-            const isActive = item.active
-            return (
-              <button
-                key={item.label}
-                onClick={() => {
-                  if (item.sceneNum) {
-                    window.dispatchEvent(new CustomEvent('nav-cinema', { detail: item.sceneNum }))
-                    window.scrollTo({ top: 0, behavior: 'smooth' })
-                  } else {
-                    if (item.subScene) {
-                      window.dispatchEvent(new CustomEvent('nav-hero4', { detail: item.subScene }))
-                    }
-                    if (item.targetId) {
-                      const el = document.getElementById(item.targetId)
-                      if (el) el.scrollIntoView({ behavior: 'smooth' })
-                    }
-                  }
-                }}
-                className="pointer-events-auto cursor-pointer rounded-full px-2.5 lg:px-3 py-1 text-[10px] lg:text-[11px] font-bold border flex items-center gap-1.5 shrink-0 transition-all duration-300 hover:scale-105"
-                style={{
-                  backgroundColor: isActive ? '#7CC248' : 'rgba(255, 255, 255, 0.08)',
-                  borderColor: isActive ? '#7CC248' : 'rgba(255, 255, 255, 0.15)',
-                  color: isActive ? '#fff' : 'rgba(255, 255, 255, 0.8)',
-                  boxShadow: isActive
-                    ? '0 0 16px rgba(124, 194, 72, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.4)'
-                    : 'none',
-                }}
-              >
-                <span className={isActive ? 'font-extrabold tracking-wide' : 'font-medium'}>{item.label}</span>
-                {isActive && (
-                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-white ml-0.5 shadow-[0_0_4px_#fff]" />
-                )}
-              </button>
-            )
-          })}
-        </div>
-      </div>
 
-      {/* ЛЕВА ВЕРХНЯ КАРТОЧКА: Видна только на десктопе */}
-      <div className={`hidden md:block absolute top-8 left-8 z-10 pointer-events-none max-w-md lg:max-w-lg transition-all duration-200 ease-out ${
+
+      {/* ЛЕВА ВЕРХНЯ КАРТОЧКА: Видна только на десктопе — сдвинута вниз на 72px чтобы не прятаться под шапкой */}
+      <div className={`hidden md:block absolute top-20 left-8 z-10 pointer-events-none max-w-md lg:max-w-lg transition-all duration-200 ease-out ${
         isMapVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4'
       }`}>
         <div className="pointer-events-auto rounded-[32px] border border-white/20 border-t-white/50 border-l-white/35 bg-[#0b1019]/75 backdrop-blur-3xl shadow-[0_25px_60px_rgba(0,0,0,0.85)] p-6 lg:p-8 space-y-4 lg:space-y-5 transition-all duration-500 hover:border-white/35">

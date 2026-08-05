@@ -17,7 +17,6 @@ interface NavPill {
 }
 
 const SITE_NAV: NavPill[] = [
-  { label: 'Головна', sceneNum: 1 },
   { label: 'Послуги', sceneNum: 2 },
   { label: 'Китай', sceneNum: 3 },
   { label: 'Карта', targetId: 's1' },
@@ -26,7 +25,6 @@ const SITE_NAV: NavPill[] = [
   { label: 'Переваги', subScene: 'scene6', targetId: 's2' },
   { label: 'Контакти', subScene: 'scene7', targetId: 's2' },
   { label: 'Схема', targetId: 's3' },
-  { label: 'Заявка', targetId: 's4' },
 ]
 
 export function HeaderNav({ lang, onToggleLang, onNavigateQuiz, mounted = true }: HeaderNavProps) {
