@@ -47,30 +47,41 @@ export function HeaderNav({ lang, onToggleLang, onNavigateQuiz, mounted = true }
   }, [mobileOpen])
 
   const handleNavClick = (target: string) => {
+    delete document.body.dataset.modalOpen
+    document.body.style.overflow = ''
     setMobileOpen(false)
-    if (target === 'top') {
-      window.scrollTo({ top: 0, behavior: 'smooth' })
-    } else {
-      const el = document.getElementById(target)
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth' })
+
+    setTimeout(() => {
+      if (target === 'top') {
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+      } else {
+        const el = document.getElementById(target)
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth' })
+        }
       }
-    }
+    }, 60)
   }
 
   const handleNavPill = (item: NavPill) => {
-    if (item.sceneNum) {
-      window.dispatchEvent(new CustomEvent('nav-cinema', { detail: item.sceneNum }))
-      window.scrollTo({ top: 0, behavior: 'smooth' })
-      return
-    }
-    if (item.subScene) {
-      window.dispatchEvent(new CustomEvent('nav-hero4', { detail: item.subScene }))
-    }
-    if (item.targetId) {
-      const el = document.getElementById(item.targetId)
-      if (el) el.scrollIntoView({ behavior: 'smooth' })
-    }
+    delete document.body.dataset.modalOpen
+    document.body.style.overflow = ''
+    setMobileOpen(false)
+
+    setTimeout(() => {
+      if (item.sceneNum) {
+        window.dispatchEvent(new CustomEvent('nav-cinema', { detail: item.sceneNum }))
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+        return
+      }
+      if (item.subScene) {
+        window.dispatchEvent(new CustomEvent('nav-hero4', { detail: item.subScene }))
+      }
+      if (item.targetId) {
+        const el = document.getElementById(item.targetId)
+        if (el) el.scrollIntoView({ behavior: 'smooth' })
+      }
+    }, 60)
   }
 
   return (
@@ -234,7 +245,7 @@ export function HeaderNav({ lang, onToggleLang, onNavigateQuiz, mounted = true }
             {SITE_NAV.map((item) => (
               <button
                 key={item.label}
-                onClick={() => { setMobileOpen(false); handleNavPill(item) }}
+                onClick={() => handleNavPill(item)}
                 className="text-left text-xl font-bold text-slate-800 hover:text-[#5a9c2e] transition-colors py-3.5 border-b border-slate-300/70 flex items-center justify-between group cursor-pointer"
               >
                 <span>{item.label}</span>
@@ -246,7 +257,12 @@ export function HeaderNav({ lang, onToggleLang, onNavigateQuiz, mounted = true }
           {/* Нижняя часть: CTA + контакты */}
           <div className="px-6 py-6 border-t border-slate-300/80 bg-white/60 space-y-3">
             <button
-              onClick={() => { setMobileOpen(false); onNavigateQuiz() }}
+              onClick={() => {
+                delete document.body.dataset.modalOpen
+                document.body.style.overflow = ''
+                setMobileOpen(false)
+                setTimeout(onNavigateQuiz, 60)
+              }}
               className="w-full rounded-2xl py-4 text-sm font-extrabold text-white shadow-lg flex items-center justify-center gap-2 cursor-pointer active:scale-95 transition-transform"
               style={{ backgroundColor: ACCENT }}
             >
