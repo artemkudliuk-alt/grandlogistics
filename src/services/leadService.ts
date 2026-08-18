@@ -26,6 +26,10 @@ function escapeHtml(text: string): string {
     .replace(/>/g, '&gt;')
 }
 
+function stripEmojis(text: string): string {
+  return text.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, '').trim()
+}
+
 function formatTelegramDirectMessage(lead: LeadData): string {
   const dateStr = new Date().toLocaleString('uk-UA', { timeZone: 'Europe/Kyiv' })
 
@@ -92,21 +96,46 @@ async function sendDirectToBitrix24(lead: LeadData): Promise<void> {
   const name = lead.name || (lead.formType === 'quiz' ? 'Клієнт з квізу' : 'Клієнт з сайту')
   const route = [lead.origin, lead.destination].filter(Boolean).join(' -> ')
 
+  const cleanName = stripEmojis(name)
+  const cleanContact = stripEmojis(contact)
+  const cleanRoute = stripEmojis(route)
+  const cleanCargo = stripEmojis(lead.cargoType || '')
+
   const commentsList = [
     `Джерело: ${lead.formType === 'quiz' ? 'Квіз-калькулятор' : lead.formType === 'quick_calc' ? 'Швидкий розрахунок' : 'Контактна форма'}`,
-    name ? `Клієнт: ${name}` : '',
-    contact ? `Телефон: ${contact}` : '',
-    route ? `Маршрут: ${route}` : '',
-    lead.cargoType ? `Вантаж: ${lead.cargoType}` : '',
-    lead.weight || lead.volume ? `Вага/Об'єм: ${lead.weight || '-'}т / ${lead.volume || '-'}м³` : '',
-    lead.extras?.length ? `Додаткові послуги: ${lead.extras.join(', ')}` : '',
-    lead.comment ? `Коментар: ${lead.comment}` : '',
-    `Мова: ${lead.lang || 'UK'}`,
+    `Клієнт: ${cleanName}`,
+    `Телефон: ${cleanContact}`,
+    cleanRoute ? `Маршрут: ${cleanRoute}` : '',
+    cleanCargo ? `Вантаж: ${cleanCargo}` : '',
+    lead.weight || lead.volume ? `Вага/Об'єм: ${lead.weight || '-'}т / ${lead.volume || '-'}м3` : '',
+    lead.extras?.length ? `Послуги: ${lead.extras.map(stripEmojis).join(', ')}` : '',
+    lead.comment ? `Коментар: ${stripEmojis(lead.comment)}` : '',
   ].filter(Boolean).join('\n')
 
-  const dealTitle = `Заявка: ${route || lead.cargoType || 'Логістика'} (${contact || name})`
+  const dealTitle = stripEmojis(`Заявка: ${cleanRoute || cleanCargo || 'Логістика'} (${cleanContact || cleanName})`)
 
   try {
+    let contactId: number | null = null
+    try {
+      const contactRes = await fetch(`${BITRIX24_WEBHOOK}crm.contact.add.json`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fields: {
+            NAME: cleanName,
+            PHONE: cleanContact ? [{ VALUE: cleanContact, VALUE_TYPE: 'WORK' }] : [],
+            COMMENTS: commentsList,
+            SOURCE_ID: 'WEB',
+            OPENED: 'Y',
+          },
+        }),
+      })
+      const cData = await contactRes.json()
+      if (cData && cData.result) contactId = Number(cData.result)
+    } catch {
+      // Игнорируем ошибку контакта
+    }
+
     await fetch(`${BITRIX24_WEBHOOK}crm.deal.add.json`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -115,6 +144,8 @@ async function sendDirectToBitrix24(lead: LeadData): Promise<void> {
           TITLE: dealTitle,
           STAGE_ID: 'NEW',
           CATEGORY_ID: 0,
+          ASSIGNED_BY_ID: 1,
+          CONTACT_ID: contactId || undefined,
           COMMENTS: commentsList,
           SOURCE_ID: 'WEB',
           OPENED: 'Y',
@@ -129,7 +160,7 @@ async function sendDirectToBitrix24(lead: LeadData): Promise<void> {
 /**
  * Единая функция отправки лида с сайта:
  * 1. Отправляет событие аналитики в GA4 и Meta Pixel
- * 2. Делает серверный запрос в /api/lead (Vercel Serverless Function) для 100% доставки в Telegram и Bitrix24
+ * 2. Делает серверный запрос в /api/lead (Vercel Serverless Function)
  * 3. Если API недоступен, использует надежный клиентский фоллбэк
  */
 export async function submitLead(lead: LeadData): Promise<{ success: boolean; message?: string }> {
@@ -155,7 +186,7 @@ export async function submitLead(lead: LeadData): Promise<{ success: boolean; me
       }
     }
   } catch {
-    // В случае ошибки локального окружения переходим к прямому каналу
+    // В случае ошибки переходим к прямому каналу
   }
 
   // 3. Резервный метод: Прямая клиентская отправка

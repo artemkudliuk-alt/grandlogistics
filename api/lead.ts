@@ -11,8 +11,12 @@ function escapeHtml(text: string): string {
     .replace(/>/g, '&gt;')
 }
 
+// Удаление 4-байтных эмодзи для совместимости с MySQL utf8 базой Bitrix24
+function stripEmojis(text: string): string {
+  return text.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, '').trim()
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // CORS headers for local/cross-domain testing
   res.setHeader('Access-Control-Allow-Credentials', 'true')
   res.setHeader('Access-Control-Allow-Origin', '*')
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT')
@@ -34,7 +38,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const name = lead.name || (lead.formType === 'quiz' ? 'Клієнт з квізу' : 'Клієнт з сайту')
   const route = [lead.origin, lead.destination].filter(Boolean).join(' -> ')
 
-  // 1. Форматирование сообщения для Telegram
+  // 1. Telegram Message (с красивыми эмодзи)
   const dateStr = new Date().toLocaleString('uk-UA', { timeZone: 'Europe/Kyiv' })
   let tgTitle = '📬 <b>НОВА ЗАЯВКА З САЙТУ</b>'
   if (lead.formType === 'quiz') tgTitle = '🎯 <b>НОВА ЗАЯВКА: КВІЗ-КАЛЬКУЛЯТОР</b>'
@@ -64,21 +68,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   tgLines.push('━━━━━━━━━━━━━━━━━━━━')
   tgLines.push('🚀 <i>Grand Logistics Global Platform</i>')
 
+  // 2. Чистый текст для Bitrix24 (без 4-байтных эмодзи)
+  const cleanName = stripEmojis(name)
+  const cleanContact = stripEmojis(contact)
+  const cleanRoute = stripEmojis(route)
+  const cleanCargo = stripEmojis(lead.cargoType || '')
+
   const commentsList = [
     `Джерело: ${lead.formType === 'quiz' ? 'Квіз-калькулятор' : lead.formType === 'quick_calc' ? 'Швидкий розрахунок' : 'Контактна форма'}`,
-    `Клієнт: ${name}`,
-    `Телефон: ${contact}`,
-    route ? `Маршрут: ${route}` : '',
-    lead.cargoType ? `Вантаж: ${lead.cargoType}` : '',
-    lead.weight || lead.volume ? `Вага/Об'єм: ${lead.weight || '-'}т / ${lead.volume || '-'}м³` : '',
-    lead.extras?.length ? `Послуги: ${lead.extras.join(', ')}` : '',
-    lead.comment ? `Коментар: ${lead.comment}` : '',
+    `Клієнт: ${cleanName}`,
+    `Телефон: ${cleanContact}`,
+    cleanRoute ? `Маршрут: ${cleanRoute}` : '',
+    cleanCargo ? `Вантаж: ${cleanCargo}` : '',
+    lead.weight || lead.volume ? `Вага/Об'єм: ${lead.weight || '-'}т / ${lead.volume || '-'}м3` : '',
+    lead.extras?.length ? `Послуги: ${lead.extras.map(stripEmojis).join(', ')}` : '',
+    lead.comment ? `Коментар: ${stripEmojis(lead.comment)}` : '',
   ].filter(Boolean).join('\n')
 
-  const dealTitle = `Заявка: ${route || lead.cargoType || 'Логістика'} (${contact || name})`
+  const dealTitle = stripEmojis(`Заявка: ${cleanRoute || cleanCargo || 'Логістика'} (${cleanContact || cleanName})`)
 
   try {
-    // 1. Telegram Bot API
+    // 1. Отправка в Telegram
     const tgPromise = fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -90,8 +100,32 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }),
     })
 
-    // 2. Bitrix24 CRM Deal Creation
-    const b24DealPromise = fetch(`${BITRIX24_WEBHOOK}crm.deal.add.json`, {
+    // 2. Создание контакта в Bitrix24
+    let contactId: number | null = null
+    try {
+      const contactRes = await fetch(`${BITRIX24_WEBHOOK}crm.contact.add.json`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fields: {
+            NAME: cleanName,
+            PHONE: cleanContact ? [{ VALUE: cleanContact, VALUE_TYPE: 'WORK' }] : [],
+            COMMENTS: commentsList,
+            SOURCE_ID: 'WEB',
+            OPENED: 'Y',
+          },
+        }),
+      })
+      const contactData = await contactRes.json()
+      if (contactData && contactData.result) {
+        contactId = Number(contactData.result)
+      }
+    } catch (e) {
+      console.warn('Contact create error:', e)
+    }
+
+    // 3. Создание Сделки в Bitrix24
+    const b24DealRes = await fetch(`${BITRIX24_WEBHOOK}crm.deal.add.json`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -99,6 +133,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           TITLE: dealTitle,
           STAGE_ID: 'NEW',
           CATEGORY_ID: 0,
+          ASSIGNED_BY_ID: 1,
+          CONTACT_ID: contactId || undefined,
           COMMENTS: commentsList,
           SOURCE_ID: 'WEB',
           OPENED: 'Y',
@@ -106,22 +142,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }),
     })
 
-    // 3. Bitrix24 CRM Contact Creation
-    const b24ContactPromise = fetch(`${BITRIX24_WEBHOOK}crm.contact.add.json`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        fields: {
-          NAME: name,
-          PHONE: [{ VALUE: contact, VALUE_TYPE: 'WORK' }],
-          COMMENTS: commentsList,
-          SOURCE_ID: 'WEB',
-          OPENED: 'Y',
-        },
-      }),
-    })
-
-    const [tgRes, b24DealRes] = await Promise.all([tgPromise, b24DealPromise, b24ContactPromise])
+    const [tgRes] = await Promise.all([tgPromise])
     const tgData = await tgRes.json()
     const b24Data = await b24DealRes.json()
 
