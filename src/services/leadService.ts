@@ -85,7 +85,7 @@ function formatTelegramDirectMessage(lead: LeadData): string {
 }
 
 /**
- * Отправка в Bitrix24 REST API: создает Контакт, Сделку (Deals Kanban) и Лид
+ * Отправка в Bitrix24 REST API через URLSearchParams (CORS-friendly, мгновенное создание сделки и лида)
  */
 async function sendToBitrix24(lead: LeadData): Promise<void> {
   try {
@@ -95,70 +95,47 @@ async function sendToBitrix24(lead: LeadData): Promise<void> {
 
     const commentsList = [
       `Джерело: ${lead.formType}`,
-      contact ? `Контактний номер: ${contact}` : '',
+      contact ? `Контакт: ${contact}` : '',
       route ? `Маршрут: ${route}` : '',
       lead.cargoType ? `Вантаж: ${lead.cargoType}` : '',
       lead.weight || lead.volume ? `Вага/Об'єм: ${lead.weight || '-'}т / ${lead.volume || '-'}м³` : '',
       lead.extras?.length ? `Послуги: ${lead.extras.join(', ')}` : '',
       lead.comment ? `Коментар: ${lead.comment}` : '',
-      `Мова інтерфейсу: ${lead.lang || 'UK'}`,
+      `Мова: ${lead.lang || 'UK'}`,
     ].filter(Boolean).join('\n')
 
-    // 1. Создаем Контакт (Contact) в Bitrix24
-    let contactId: number | null = null
-    try {
-      const contactRes = await fetch(`${BITRIX24_WEBHOOK}crm.contact.add.json`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          fields: {
-            NAME: name,
-            PHONE: contact ? [{ VALUE: contact, VALUE_TYPE: 'WORK' }] : [],
-            SOURCE_ID: 'WEB',
-            OPENED: 'Y',
-          },
-        }),
-      })
-      const contactData = await contactRes.json()
-      if (contactData && contactData.result) {
-        contactId = Number(contactData.result)
-      }
-    } catch (e) {
-      console.warn('Bitrix24 contact error:', e)
+    const dealTitle = `Заявка: ${route || lead.cargoType || 'Логістика'} (${contact || name})`
+
+    // 1. Создаем Сделку (Deal) в колонке "New" канбана
+    const dealParams = new URLSearchParams()
+    dealParams.append('fields[TITLE]', dealTitle)
+    dealParams.append('fields[STAGE_ID]', 'NEW')
+    dealParams.append('fields[COMMENTS]', commentsList)
+    dealParams.append('fields[SOURCE_ID]', 'WEB')
+    dealParams.append('fields[OPENED]', 'Y')
+
+    // 2. Создаем Лид (Lead)
+    const leadParams = new URLSearchParams()
+    leadParams.append('fields[TITLE]', dealTitle)
+    leadParams.append('fields[NAME]', name)
+    if (contact) {
+      leadParams.append('fields[PHONE][0][VALUE]', contact)
+      leadParams.append('fields[PHONE][0][VALUE_TYPE]', 'WORK')
     }
+    leadParams.append('fields[COMMENTS]', commentsList)
+    leadParams.append('fields[SOURCE_ID]', 'WEB')
+    leadParams.append('fields[OPENED]', 'Y')
 
-    // 2. Создаем Сделку (Deal) в колонке "NEW" на Канбан-доске
-    const dealTitle = `Заявка: ${route || lead.cargoType || 'Логістика'} (${name})`
-    await fetch(`${BITRIX24_WEBHOOK}crm.deal.add.json`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        fields: {
-          TITLE: dealTitle,
-          STAGE_ID: 'NEW',
-          CONTACT_ID: contactId || undefined,
-          COMMENTS: commentsList,
-          SOURCE_ID: 'WEB',
-          OPENED: 'Y',
-        },
+    await Promise.all([
+      fetch(`${BITRIX24_WEBHOOK}crm.deal.add.json`, {
+        method: 'POST',
+        body: dealParams,
       }),
-    })
-
-    // 3. Создаем Лид (Lead) в CRM
-    await fetch(`${BITRIX24_WEBHOOK}crm.lead.add.json`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        fields: {
-          TITLE: dealTitle,
-          NAME: name,
-          PHONE: contact ? [{ VALUE: contact, VALUE_TYPE: 'WORK' }] : [],
-          COMMENTS: commentsList,
-          SOURCE_ID: 'WEB',
-          OPENED: 'Y',
-        },
+      fetch(`${BITRIX24_WEBHOOK}crm.lead.add.json`, {
+        method: 'POST',
+        body: leadParams,
       }),
-    })
+    ])
   } catch (err) {
     console.warn('Bitrix24 submission error:', err)
   }
@@ -167,7 +144,7 @@ async function sendToBitrix24(lead: LeadData): Promise<void> {
 /**
  * Единая функция отправки лида с сайта:
  * 1. Отправляет уведомление в Telegram Bot (группа grandlog)
- * 2. Создаёт сделку и контакт в Bitrix24 CRM
+ * 2. Создаёт сделку и лид в Bitrix24 CRM (через URLSearchParams)
  * 3. Отправляет событие аналитики в GA4 и Meta Pixel
  */
 export async function submitLead(lead: LeadData): Promise<{ success: boolean; message?: string }> {
