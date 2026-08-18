@@ -17,6 +17,7 @@ export interface LeadData {
 
 const TG_BOT_TOKEN = '8808616806:AAG1SuTDTZ4ZdBftTedFIvpUocEdXthqQRE'
 const TG_CHAT_ID = '-5009438060'
+const BITRIX24_WEBHOOK = 'https://b24-9u8crp.bitrix24.com/rest/1/vankzff8r2191ma0/'
 
 function escapeHtml(text: string): string {
   return text
@@ -84,7 +85,63 @@ function formatTelegramDirectMessage(lead: LeadData): string {
 }
 
 /**
- * Прямая и надёжная отправка лида в Telegram бот и трекинг аналитики
+ * Отправка в Bitrix24 REST API
+ */
+async function sendToBitrix24(lead: LeadData): Promise<void> {
+  try {
+    const contact = lead.phone || lead.contact || ''
+    const name = lead.name || (lead.formType === 'quiz' ? 'Клієнт з квізу' : 'Клієнт з сайту')
+    const route = [lead.origin, lead.destination].filter(Boolean).join(' -> ')
+
+    const commentsList = [
+      `Джерело форми: ${lead.formType}`,
+      route ? `Маршрут: ${route}` : '',
+      lead.cargoType ? `Вантаж: ${lead.cargoType}` : '',
+      lead.weight || lead.volume ? `Вага/Об'єм: ${lead.weight || '-'}т / ${lead.volume || '-'}м³` : '',
+      lead.extras?.length ? `Послуги: ${lead.extras.join(', ')}` : '',
+      lead.comment ? `Коментар: ${lead.comment}` : '',
+      `Мова: ${lead.lang || 'UK'}`,
+    ].filter(Boolean).join('\n')
+
+    // 1. Создаем Lead в CRM
+    await fetch(`${BITRIX24_WEBHOOK}crm.lead.add.json`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fields: {
+          TITLE: `Заявка: ${lead.cargoType || 'Вантаж'} (${name})`,
+          NAME: name,
+          PHONE: contact ? [{ VALUE: contact, VALUE_TYPE: 'WORK' }] : [],
+          COMMENTS: commentsList,
+          SOURCE_ID: 'WEB',
+          OPENED: 'Y',
+        },
+      }),
+    })
+
+    // 2. Создаем Deal (Сделка на канбан-доске)
+    await fetch(`${BITRIX24_WEBHOOK}crm.deal.add.json`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fields: {
+          TITLE: `Заявка: ${route || lead.cargoType || 'Логістика'} (${name})`,
+          COMMENTS: `Контакт: ${contact}\n${commentsList}`,
+          SOURCE_ID: 'WEB',
+          OPENED: 'Y',
+        },
+      }),
+    })
+  } catch (err) {
+    console.warn('Bitrix24 submission error:', err)
+  }
+}
+
+/**
+ * Единая функция отправки лида с сайта:
+ * 1. Отправляет уведомление в Telegram Bot (группа grandlog)
+ * 2. Создаёт лид и сделку в Bitrix24 CRM
+ * 3. Отправляет событие аналитики в GA4 и Meta Pixel
  */
 export async function submitLead(lead: LeadData): Promise<{ success: boolean; message?: string }> {
   // 1. Аналитика (Google Analytics 4 + Meta Pixel)
@@ -94,19 +151,23 @@ export async function submitLead(lead: LeadData): Promise<{ success: boolean; me
     route: [lead.origin, lead.destination].filter(Boolean).join(' -> '),
   })
 
-  // 2. Отправка в Telegram Bot API
+  // 2. Параллельная отправка в Telegram Bot API и Bitrix24 CRM
   try {
     const text = formatTelegramDirectMessage(lead)
-    const tgRes = await fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        chat_id: TG_CHAT_ID,
-        text: text,
-        parse_mode: 'HTML',
-        disable_web_page_preview: true,
+
+    const [tgRes] = await Promise.all([
+      fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: TG_CHAT_ID,
+          text: text,
+          parse_mode: 'HTML',
+          disable_web_page_preview: true,
+        }),
       }),
-    })
+      sendToBitrix24(lead),
+    ])
 
     const tgData = await tgRes.json()
     if (tgData.ok) {
