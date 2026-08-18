@@ -85,68 +85,52 @@ function formatTelegramDirectMessage(lead: LeadData): string {
 }
 
 /**
- * Отправка в Bitrix24 REST API через GET-запрос:
- * GET-запросы никогда не блокируются CORS браузера и работают на всех устройствах со 100% надёжностью
+ * Прямая клиентская отправка в Bitrix24 (резервный канал)
  */
-async function sendToBitrix24(lead: LeadData): Promise<void> {
+async function sendDirectToBitrix24(lead: LeadData): Promise<void> {
+  const contact = lead.phone || lead.contact || ''
+  const name = lead.name || (lead.formType === 'quiz' ? 'Клієнт з квізу' : 'Клієнт з сайту')
+  const route = [lead.origin, lead.destination].filter(Boolean).join(' -> ')
+
+  const commentsList = [
+    `Джерело: ${lead.formType === 'quiz' ? 'Квіз-калькулятор' : lead.formType === 'quick_calc' ? 'Швидкий розрахунок' : 'Контактна форма'}`,
+    name ? `Клієнт: ${name}` : '',
+    contact ? `Телефон: ${contact}` : '',
+    route ? `Маршрут: ${route}` : '',
+    lead.cargoType ? `Вантаж: ${lead.cargoType}` : '',
+    lead.weight || lead.volume ? `Вага/Об'єм: ${lead.weight || '-'}т / ${lead.volume || '-'}м³` : '',
+    lead.extras?.length ? `Додаткові послуги: ${lead.extras.join(', ')}` : '',
+    lead.comment ? `Коментар: ${lead.comment}` : '',
+    `Мова: ${lead.lang || 'UK'}`,
+  ].filter(Boolean).join('\n')
+
+  const dealTitle = `Заявка: ${route || lead.cargoType || 'Логістика'} (${contact || name})`
+
   try {
-    const contact = lead.phone || lead.contact || ''
-    const name = lead.name || (lead.formType === 'quiz' ? 'Клієнт з квізу' : 'Клієнт з сайту')
-    const route = [lead.origin, lead.destination].filter(Boolean).join(' -> ')
-
-    const commentsList = [
-      `Джерело: ${lead.formType === 'quiz' ? 'Квіз-калькулятор' : lead.formType === 'quick_calc' ? 'Швидкий розрахунок' : 'Контактна форма'}`,
-      name ? `Клієнт: ${name}` : '',
-      contact ? `Телефон: ${contact}` : '',
-      route ? `Маршрут: ${route}` : '',
-      lead.cargoType ? `Вантаж: ${lead.cargoType}` : '',
-      lead.weight || lead.volume ? `Вага/Об'єм: ${lead.weight || '-'}т / ${lead.volume || '-'}м³` : '',
-      lead.extras?.length ? `Додаткові послуги: ${lead.extras.join(', ')}` : '',
-      lead.comment ? `Коментар: ${lead.comment}` : '',
-      `Мова інтерфейсу: ${lead.lang || 'UK'}`,
-    ].filter(Boolean).join('\n')
-
-    const dealTitle = `Заявка: ${route || lead.cargoType || 'Логістика'} (${contact || name})`
-
-    // 1. Создаем Сделку (Deal) на Канбан-доске в колонке "New"
-    const dealParams = new URLSearchParams({
-      'fields[TITLE]': dealTitle,
-      'fields[CATEGORY_ID]': '0',
-      'fields[STAGE_ID]': 'NEW',
-      'fields[COMMENTS]': commentsList,
-      'fields[SOURCE_ID]': 'WEB',
-      'fields[OPENED]': 'Y',
+    await fetch(`${BITRIX24_WEBHOOK}crm.deal.add.json`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fields: {
+          TITLE: dealTitle,
+          STAGE_ID: 'NEW',
+          CATEGORY_ID: 0,
+          COMMENTS: commentsList,
+          SOURCE_ID: 'WEB',
+          OPENED: 'Y',
+        },
+      }),
     })
-
-    const dealUrl = `${BITRIX24_WEBHOOK}crm.deal.add.json?${dealParams.toString()}`
-
-    // 2. Создаем Контакт (Contact) для привязки телефона и имени
-    const contactParams = new URLSearchParams({
-      'fields[NAME]': name,
-      'fields[SOURCE_ID]': 'WEB',
-      'fields[OPENED]': 'Y',
-    })
-    if (contact) {
-      contactParams.append('fields[PHONE][0][VALUE]', contact)
-      contactParams.append('fields[PHONE][0][VALUE_TYPE]', 'WORK')
-    }
-    const contactUrl = `${BITRIX24_WEBHOOK}crm.contact.add.json?${contactParams.toString()}`
-
-    // Выполняем параллельно
-    await Promise.all([
-      fetch(dealUrl, { method: 'GET', mode: 'no-cors' }).catch(() => {}),
-      fetch(contactUrl, { method: 'GET', mode: 'no-cors' }).catch(() => {}),
-    ])
-  } catch (err) {
-    console.warn('Bitrix24 submission error:', err)
+  } catch (e) {
+    console.warn('Bitrix24 direct error:', e)
   }
 }
 
 /**
  * Единая функция отправки лида с сайта:
- * 1. Отправляет уведомление в Telegram Bot (группа grandlog)
- * 2. Создаёт сделку в Bitrix24 CRM (через GET no-cors — 0 задержек, без CORS блокировок)
- * 3. Отправляет событие аналитики в GA4 и Meta Pixel
+ * 1. Отправляет событие аналитики в GA4 и Meta Pixel
+ * 2. Делает серверный запрос в /api/lead (Vercel Serverless Function) для 100% доставки в Telegram и Bitrix24
+ * 3. Если API недоступен, использует надежный клиентский фоллбэк
  */
 export async function submitLead(lead: LeadData): Promise<{ success: boolean; message?: string }> {
   // 1. Аналитика (Google Analytics 4 + Meta Pixel)
@@ -156,10 +140,27 @@ export async function submitLead(lead: LeadData): Promise<{ success: boolean; me
     route: [lead.origin, lead.destination].filter(Boolean).join(' -> '),
   })
 
-  // 2. Параллельная отправка в Telegram Bot API и Bitrix24 CRM
+  // 2. Первичный метод: Vercel Serverless Function /api/lead (Сервер-к-серверу)
+  try {
+    const apiRes = await fetch('/api/lead', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(lead),
+    })
+
+    if (apiRes.ok) {
+      const data = await apiRes.json()
+      if (data.success) {
+        return { success: true }
+      }
+    }
+  } catch {
+    // В случае ошибки локального окружения переходим к прямому каналу
+  }
+
+  // 3. Резервный метод: Прямая клиентская отправка
   try {
     const text = formatTelegramDirectMessage(lead)
-
     const [tgRes] = await Promise.all([
       fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage`, {
         method: 'POST',
@@ -171,7 +172,7 @@ export async function submitLead(lead: LeadData): Promise<{ success: boolean; me
           disable_web_page_preview: true,
         }),
       }),
-      sendToBitrix24(lead),
+      sendDirectToBitrix24(lead),
     ])
 
     const tgData = await tgRes.json()
