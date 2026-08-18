@@ -1,6 +1,8 @@
 import { useState, type FormEvent } from 'react'
 import { ACCENT } from '../config/scenes'
 import type { Lang } from '../config/lang'
+import { submitLead } from '../services/leadService'
+import { trackQuizStep } from '../utils/analytics'
 import {
   Wheat,
   Cpu,
@@ -69,6 +71,8 @@ export function QuizContent({ lang }: { lang: Lang }) {
   const [extras, setExtras] = useState<string[]>([EXTRAS[0].title, EXTRAS[3].title])
   const [contact, setContact] = useState('')
   const [submitted, setSubmitted] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
   const toggleExtra = (title: string) => {
     setExtras((prev) => (prev.includes(title) ? prev.filter((s) => s !== title) : [...prev, title]))
@@ -78,15 +82,41 @@ export function QuizContent({ lang }: { lang: Lang }) {
     ? ['Маршрут перевезення', 'Параметри вантажу', 'Послуги «під ключ»', 'Фінал & Контакти']
     : ['Shipping Route', 'Cargo Parameters', 'Turnkey Services', 'Final & Contacts']
 
-  const handleSubmit = (e: FormEvent) => {
+  const goToStep = (to: 1 | 2 | 3 | 4) => {
+    trackQuizStep(to, stepNames[to - 1])
+    setStep(to)
+  }
+
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    setSubmitted(true)
+    setIsSubmitting(true)
+    setErrorMsg(null)
+
+    const res = await submitLead({
+      formType: 'quiz',
+      origin,
+      destination,
+      cargoType: cargo,
+      weight,
+      volume,
+      extras,
+      contact,
+      lang,
+    })
+
+    setIsSubmitting(false)
+
+    if (res.success) {
+      setSubmitted(true)
+    } else {
+      setErrorMsg(res.message || (uk ? 'Помилка відправки. Спробуйте ще раз.' : 'Submission error. Please try again.'))
+    }
   }
 
   const backBtn = (to: 1 | 2 | 3) => (
     <button
       type="button"
-      onClick={() => setStep(to)}
+      onClick={() => goToStep(to)}
       className="pointer-events-auto rounded-xl px-5 py-3 text-xs font-bold text-white/80 border border-white/20 hover:bg-white/10 transition-all cursor-pointer"
     >
       ← {uk ? 'Назад' : 'Back'}
@@ -96,7 +126,7 @@ export function QuizContent({ lang }: { lang: Lang }) {
   const nextBtn = (to: 2 | 3 | 4, label: string) => (
     <button
       type="button"
-      onClick={() => setStep(to)}
+      onClick={() => goToStep(to)}
       className="pointer-events-auto rounded-xl py-3.5 px-8 text-sm font-extrabold text-white shadow-[0_10px_30px_rgba(124,194,72,0.45)] transition-all duration-300 hover:scale-105 hover:bg-[#88d450] flex items-center gap-2 cursor-pointer"
       style={{ backgroundColor: ACCENT }}
     >
@@ -382,14 +412,28 @@ export function QuizContent({ lang }: { lang: Lang }) {
             />
           </div>
 
+          {errorMsg && (
+            <div className="rounded-xl border border-red-500/40 bg-red-500/20 p-3 text-xs text-red-200">
+              ⚠️ {errorMsg}
+            </div>
+          )}
+
           <div className="pt-2 flex items-center justify-between">
             {backBtn(3)}
             <button
               type="submit"
-              className="pointer-events-auto rounded-xl py-3.5 px-8 text-sm font-extrabold text-white shadow-[0_10px_30px_rgba(124,194,72,0.45),inset_0_1px_1px_rgba(255,255,255,0.4)] transition-all duration-300 hover:scale-105 hover:bg-[#88d450] hover:shadow-[0_15px_40px_rgba(124,194,72,0.65)] active:scale-95 flex items-center gap-2 cursor-pointer"
+              disabled={isSubmitting}
+              className="pointer-events-auto rounded-xl py-3.5 px-8 text-sm font-extrabold text-white shadow-[0_10px_30px_rgba(124,194,72,0.45),inset_0_1px_1px_rgba(255,255,255,0.4)] transition-all duration-300 hover:scale-105 hover:bg-[#88d450] hover:shadow-[0_15px_40px_rgba(124,194,72,0.65)] active:scale-95 flex items-center gap-2 cursor-pointer disabled:opacity-60 disabled:pointer-events-none"
               style={{ backgroundColor: ACCENT }}
             >
-              <span>{uk ? 'Отримати 2-3 варіанти (Авіа / Ж/Д / Море) ➔' : 'Get 2-3 Options (Air / Rail / Sea) ➔'}</span>
+              {isSubmitting ? (
+                <>
+                  <span className="inline-block h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                  <span>{uk ? 'Відправка...' : 'Submitting...'}</span>
+                </>
+              ) : (
+                <span>{uk ? 'Отримати 2-3 варіанти (Авіа / Ж/Д / Море) ➔' : 'Get 2-3 Options (Air / Rail / Sea) ➔'}</span>
+              )}
             </button>
           </div>
         </div>

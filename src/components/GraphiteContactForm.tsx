@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useScrollReveal } from '../hooks/useScrollReveal'
+import { submitLead } from '../services/leadService'
 
 export function GraphiteContactForm() {
   const revealRef = useScrollReveal<HTMLDivElement>()
@@ -8,26 +9,48 @@ export function GraphiteContactForm() {
     phone: '',
     origin: '',
     destination: '',
-    cargoType: 'LCL (Контейнерні)',
+    cargoType: 'LCL (Збірні контейнери)',
     comment: '',
   })
 
   const [submitted, setSubmitted] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setSubmitted(true)
-    setTimeout(() => {
-      setSubmitted(false)
-      setFormData({
-        name: '',
-        phone: '',
-        origin: '',
-        destination: '',
-        cargoType: 'LCL (Контейнерні)',
-        comment: '',
-      })
-    }, 4000)
+    setIsSubmitting(true)
+    setErrorMsg(null)
+
+    const res = await submitLead({
+      formType: 'contact_form',
+      name: formData.name,
+      phone: formData.phone,
+      origin: formData.origin,
+      destination: formData.destination,
+      cargoType: formData.cargoType,
+      comment: formData.comment,
+      lang: 'UK',
+    })
+
+    setIsSubmitting(false)
+
+    if (res.success) {
+      setSubmitted(true)
+      setTimeout(() => {
+        setSubmitted(false)
+        setFormData({
+          name: '',
+          phone: '',
+          origin: '',
+          destination: '',
+          cargoType: 'LCL (Збірні контейнери)',
+          comment: '',
+        })
+      }, 5000)
+    } else {
+      setErrorMsg(res.message || 'Помилка відправки. Будь ласка, спробуйте ще раз або напишіть у Telegram.')
+    }
   }
 
   return (
@@ -159,11 +182,25 @@ export function GraphiteContactForm() {
                   />
                 </div>
 
+                {errorMsg && (
+                  <div className="rounded-xl border border-red-500/40 bg-red-500/20 p-3 text-xs text-red-200">
+                    ⚠️ {errorMsg}
+                  </div>
+                )}
+
                 <button
                   type="submit"
-                  className="w-full rounded-2xl bg-[#7CC248] py-3.5 text-sm font-extrabold text-white shadow-[0_10px_30px_rgba(124,194,72,0.4)] transition-all hover:scale-[1.02] hover:bg-[#88d450] active:scale-95 cursor-pointer flex items-center justify-center gap-2"
+                  disabled={isSubmitting}
+                  className="w-full rounded-2xl bg-[#7CC248] py-3.5 text-sm font-extrabold text-white shadow-[0_10px_30px_rgba(124,194,72,0.4)] transition-all hover:scale-[1.02] hover:bg-[#88d450] active:scale-95 cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60 disabled:pointer-events-none"
                 >
-                  <span>Отримати розрахунок за 15 хвилин ➔</span>
+                  {isSubmitting ? (
+                    <>
+                      <span className="inline-block h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                      <span>Відправка заявки...</span>
+                    </>
+                  ) : (
+                    <span>Отримати розрахунок за 15 хвилин ➔</span>
+                  )}
                 </button>
               </form>
             )}

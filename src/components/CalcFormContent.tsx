@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { FORM_TEXTS, ACCENT } from '../config/scenes'
 import type { Lang } from '../config/lang'
+import { submitLead } from '../services/leadService'
 
 /**
  * Поля формы «Швидкий розрахунок» — используются внутри InfoModal.
@@ -28,10 +29,30 @@ export function CalcFormContent({
   )
   const [contact, setContact] = useState('')
   const [submitted, setSubmitted] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
-    setSubmitted(true)
+    setIsSubmitting(true)
+    setErrorMsg(null)
+
+    const res = await submitLead({
+      formType: 'quick_calc',
+      origin: from,
+      destination: to,
+      cargoType: cargoType,
+      contact: contact,
+      lang: lang,
+    })
+
+    setIsSubmitting(false)
+
+    if (res.success) {
+      setSubmitted(true)
+    } else {
+      setErrorMsg(res.message || (lang === 'UK' ? 'Помилка відправки. Спробуйте ще раз.' : 'Submission error. Please try again.'))
+    }
   }
 
   if (submitted) {
@@ -124,12 +145,26 @@ export function CalcFormContent({
         />
       </div>
 
+      {errorMsg && (
+        <div className="rounded-xl border border-red-500/40 bg-red-500/20 p-3 text-xs text-red-200">
+          ⚠️ {errorMsg}
+        </div>
+      )}
+
       <button
         type="submit"
-        className="mt-2 w-full rounded-xl py-3.5 px-5 text-sm font-extrabold text-white shadow-[0_10px_30px_rgba(124,194,72,0.45),inset_0_1px_1px_rgba(255,255,255,0.4)] transition-all duration-300 hover:scale-[1.02] hover:bg-[#88d450] hover:shadow-[0_15px_40px_rgba(124,194,72,0.65)] active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer"
+        disabled={isSubmitting}
+        className="mt-2 w-full rounded-xl py-3.5 px-5 text-sm font-extrabold text-white shadow-[0_10px_30px_rgba(124,194,72,0.45),inset_0_1px_1px_rgba(255,255,255,0.4)] transition-all duration-300 hover:scale-[1.02] hover:bg-[#88d450] hover:shadow-[0_15px_40px_rgba(124,194,72,0.65)] active:scale-[0.98] flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60 disabled:pointer-events-none"
         style={{ backgroundColor: ACCENT }}
       >
-        <span>{f.submitBtn}</span>
+        {isSubmitting ? (
+          <>
+            <span className="inline-block h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
+            <span>{lang === 'UK' ? 'Відправка...' : 'Submitting...'}</span>
+          </>
+        ) : (
+          <span>{f.submitBtn}</span>
+        )}
       </button>
 
       <p className="flex items-center justify-center gap-1.5 text-center text-[11px] font-medium text-white/60 pt-1">

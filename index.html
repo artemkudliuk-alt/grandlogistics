@@ -8,8 +8,40 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- Google Analytics 4 (GA4) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-PLACEHOLDER"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      // Замініть 'G-PLACEHOLDER' на ваш реальний Measurement ID (наприклад G-XXXXXXXXXX)
+      gtag('config', 'G-PLACEHOLDER', { send_page_view: true });
+    </script>
+
+    <!-- Meta Pixel (Facebook & Instagram) -->
+    <script>
+      !function(f,b,e,v,n,t,s)
+      {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+      n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+      if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+      n.queue=[];t=b.createElement(e);t.async=!0;
+      t.src=v;s=b.getElementsByTagName(e)[0];
+      s.parentNode.insertBefore(t,s)}(window, document,'script',
+      'https://connect.facebook.net/en_US/fbevents.js');
+      // Замініть 'PIXEL_ID_PLACEHOLDER' на ваш реальний Pixel ID
+      fbq('init', 'PIXEL_ID_PLACEHOLDER');
+      fbq('track', 'PageView');
+    </script>
   </head>
   <body class="bg-black text-white font-sans antialiased">
+    <!-- Meta Pixel Fallback -->
+    <noscript>
+      <img height="1" width="1" style="display:none"
+        src="https://www.facebook.com/tr?id=PIXEL_ID_PLACEHOLDER&ev=PageView&noscript=1"
+        alt=""
+      />
+    </noscript>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
