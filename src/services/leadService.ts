@@ -17,17 +17,12 @@ export interface LeadData {
 
 const TG_BOT_TOKEN = '8808616806:AAG1SuTDTZ4ZdBftTedFIvpUocEdXthqQRE'
 const TG_CHAT_ID = '-5009438060'
-const BITRIX24_WEBHOOK = 'https://b24-9u8crp.bitrix24.com/rest/1/vankzff8r2191ma0/'
 
 function escapeHtml(text: string): string {
   return text
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
-}
-
-function stripEmojis(text: string): string {
-  return text.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, '').trim()
 }
 
 function formatTelegramMessage(lead: LeadData): string {
@@ -90,58 +85,10 @@ function formatTelegramMessage(lead: LeadData): string {
 }
 
 /**
- * Прямая отправка сделки в Bitrix24 через CORS-friendly x-www-form-urlencoded
- */
-async function sendToBitrix24Direct(lead: LeadData): Promise<void> {
-  const contact = lead.phone || lead.contact || ''
-  const name = lead.name || ''
-  const route = [lead.origin, lead.destination].filter(Boolean).join(' -> ')
-
-  const cleanContact = stripEmojis(contact)
-  const cleanName = stripEmojis(name)
-  const cleanRoute = stripEmojis(route)
-  const cleanCargo = stripEmojis(lead.cargoType || '')
-
-  const commentsList = [
-    `Джерело: ${lead.formType === 'quiz' ? 'Квіз-калькулятор' : lead.formType === 'quick_calc' ? 'Швидкий розрахунок' : 'Контактна форма'}`,
-    cleanName ? `Клієнт: ${cleanName}` : '',
-    `Телефон: ${cleanContact}`,
-    cleanRoute ? `Маршрут: ${cleanRoute}` : '',
-    cleanCargo ? `Вантаж: ${cleanCargo}` : '',
-    lead.weight || lead.volume ? `Вага/Об'єм: ${lead.weight || '-'}т / ${lead.volume || '-'}м3` : '',
-    lead.extras?.length ? `Послуги: ${lead.extras.map(stripEmojis).join(', ')}` : '',
-    lead.comment ? `Коментар: ${stripEmojis(lead.comment)}` : '',
-  ].filter(Boolean).join('\n')
-
-  const titleIdentifier = cleanName ? `${cleanName} ${cleanContact}` : cleanContact
-  const dealTitle = stripEmojis(`Заявка: ${cleanRoute || cleanCargo || 'Логістика'} (${titleIdentifier})`)
-
-  const dealParams = new URLSearchParams({
-    'fields[TITLE]': dealTitle,
-    'fields[STAGE_ID]': 'NEW',
-    'fields[CATEGORY_ID]': '0',
-    'fields[ASSIGNED_BY_ID]': '1',
-    'fields[COMMENTS]': commentsList,
-    'fields[SOURCE_ID]': 'WEB',
-    'fields[OPENED]': 'Y',
-  })
-
-  // Выполняем простой CORS-safe POST запрос
-  try {
-    await fetch(`${BITRIX24_WEBHOOK}crm.deal.add.json`, {
-      method: 'POST',
-      body: dealParams,
-    })
-  } catch (err) {
-    console.warn('Bitrix24 direct fetch error:', err)
-  }
-}
-
-/**
  * Единая функция отправки лида:
  * 1. Отправляет событие аналитики (GA4 + Meta Pixel)
- * 2. Мгновенно отправляет в Telegram Bot API
- * 3. Мгновенно создает сделку в Bitrix24 CRM
+ * 2. Мгновенно отправляет в Telegram Bot API (из браузера — CORS разрешён)
+ * 3. Отправляет данные на /api/lead (serverless) — тот создаёт сделку в Bitrix24 server-side
  */
 export async function submitLead(lead: LeadData): Promise<{ success: boolean; message?: string }> {
   // 1. Аналитика
@@ -151,25 +98,35 @@ export async function submitLead(lead: LeadData): Promise<{ success: boolean; me
     route: [lead.origin, lead.destination].filter(Boolean).join(' -> '),
   })
 
-  // 2. Параллельная гарантированная доставка (Telegram + Bitrix24)
   try {
     const tgText = formatTelegramMessage(lead)
 
-    const [tgRes] = await Promise.all([
-      fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          chat_id: TG_CHAT_ID,
-          text: tgText,
-          parse_mode: 'HTML',
-          disable_web_page_preview: true,
-        }),
+    // 2. Telegram — прямо из браузера (api.telegram.org разрешает CORS)
+    const tgPromise = fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: TG_CHAT_ID,
+        text: tgText,
+        parse_mode: 'HTML',
+        disable_web_page_preview: true,
       }),
-      sendToBitrix24Direct(lead),
-    ])
+    })
+
+    // 3. Bitrix24 — через Vercel serverless function (server-side, без CORS ограничений)
+    const b24Promise = fetch('/api/lead', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(lead),
+    })
+
+    const [tgRes, b24Res] = await Promise.all([tgPromise, b24Promise])
 
     const tgData = await tgRes.json()
+    const b24Data = await b24Res.json().catch(() => ({ success: false }))
+
+    console.log('[Lead] Telegram:', tgData.ok, '| Bitrix24:', b24Data)
+
     if (tgData.ok) {
       return { success: true }
     }
