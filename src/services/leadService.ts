@@ -30,7 +30,7 @@ function stripEmojis(text: string): string {
   return text.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, '').trim()
 }
 
-function formatTelegramDirectMessage(lead: LeadData): string {
+function formatTelegramMessage(lead: LeadData): string {
   const dateStr = new Date().toLocaleString('uk-UA', { timeZone: 'Europe/Kyiv' })
 
   let title = '📬 <b>НОВА ЗАЯВКА З САЙТУ</b>'
@@ -49,9 +49,10 @@ function formatTelegramDirectMessage(lead: LeadData): string {
   ]
 
   const contact = lead.phone || lead.contact || 'Не вказано'
-  const name = lead.name || 'Клієнт'
 
-  lines.push(`👤 <b>Клієнт:</b> ${escapeHtml(name)}`)
+  if (lead.name) {
+    lines.push(`👤 <b>Клієнт:</b> ${escapeHtml(lead.name)}`)
+  }
   lines.push(`📱 <b>Контакт:</b> <code>${escapeHtml(contact)}</code>`)
 
   if (lead.origin || lead.destination) {
@@ -89,21 +90,21 @@ function formatTelegramDirectMessage(lead: LeadData): string {
 }
 
 /**
- * Прямая клиентская отправка в Bitrix24 (резервный канал)
+ * Прямая отправка сделки в Bitrix24 через CORS-friendly x-www-form-urlencoded
  */
-async function sendDirectToBitrix24(lead: LeadData): Promise<void> {
+async function sendToBitrix24Direct(lead: LeadData): Promise<void> {
   const contact = lead.phone || lead.contact || ''
-  const name = lead.name || (lead.formType === 'quiz' ? 'Клієнт з квізу' : 'Клієнт з сайту')
+  const name = lead.name || ''
   const route = [lead.origin, lead.destination].filter(Boolean).join(' -> ')
 
-  const cleanName = stripEmojis(name)
   const cleanContact = stripEmojis(contact)
+  const cleanName = stripEmojis(name)
   const cleanRoute = stripEmojis(route)
   const cleanCargo = stripEmojis(lead.cargoType || '')
 
   const commentsList = [
     `Джерело: ${lead.formType === 'quiz' ? 'Квіз-калькулятор' : lead.formType === 'quick_calc' ? 'Швидкий розрахунок' : 'Контактна форма'}`,
-    `Клієнт: ${cleanName}`,
+    cleanName ? `Клієнт: ${cleanName}` : '',
     `Телефон: ${cleanContact}`,
     cleanRoute ? `Маршрут: ${cleanRoute}` : '',
     cleanCargo ? `Вантаж: ${cleanCargo}` : '',
@@ -112,98 +113,60 @@ async function sendDirectToBitrix24(lead: LeadData): Promise<void> {
     lead.comment ? `Коментар: ${stripEmojis(lead.comment)}` : '',
   ].filter(Boolean).join('\n')
 
-  const dealTitle = stripEmojis(`Заявка: ${cleanRoute || cleanCargo || 'Логістика'} (${cleanContact || cleanName})`)
+  const titleIdentifier = cleanName ? `${cleanName} ${cleanContact}` : cleanContact
+  const dealTitle = stripEmojis(`Заявка: ${cleanRoute || cleanCargo || 'Логістика'} (${titleIdentifier})`)
 
+  const dealParams = new URLSearchParams({
+    'fields[TITLE]': dealTitle,
+    'fields[STAGE_ID]': 'NEW',
+    'fields[CATEGORY_ID]': '0',
+    'fields[ASSIGNED_BY_ID]': '1',
+    'fields[COMMENTS]': commentsList,
+    'fields[SOURCE_ID]': 'WEB',
+    'fields[OPENED]': 'Y',
+  })
+
+  // Выполняем простой CORS-safe POST запрос
   try {
-    let contactId: number | null = null
-    try {
-      const contactRes = await fetch(`${BITRIX24_WEBHOOK}crm.contact.add.json`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          fields: {
-            NAME: cleanName,
-            PHONE: cleanContact ? [{ VALUE: cleanContact, VALUE_TYPE: 'WORK' }] : [],
-            COMMENTS: commentsList,
-            SOURCE_ID: 'WEB',
-            OPENED: 'Y',
-          },
-        }),
-      })
-      const cData = await contactRes.json()
-      if (cData && cData.result) contactId = Number(cData.result)
-    } catch {
-      // Игнорируем ошибку контакта
-    }
-
     await fetch(`${BITRIX24_WEBHOOK}crm.deal.add.json`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        fields: {
-          TITLE: dealTitle,
-          STAGE_ID: 'NEW',
-          CATEGORY_ID: 0,
-          ASSIGNED_BY_ID: 1,
-          CONTACT_ID: contactId || undefined,
-          COMMENTS: commentsList,
-          SOURCE_ID: 'WEB',
-          OPENED: 'Y',
-        },
-      }),
+      body: dealParams,
     })
-  } catch (e) {
-    console.warn('Bitrix24 direct error:', e)
+  } catch (err) {
+    console.warn('Bitrix24 direct fetch error:', err)
   }
 }
 
 /**
- * Единая функция отправки лида с сайта:
- * 1. Отправляет событие аналитики в GA4 и Meta Pixel
- * 2. Делает серверный запрос в /api/lead (Vercel Serverless Function)
- * 3. Если API недоступен, использует надежный клиентский фоллбэк
+ * Единая функция отправки лида:
+ * 1. Отправляет событие аналитики (GA4 + Meta Pixel)
+ * 2. Мгновенно отправляет в Telegram Bot API
+ * 3. Мгновенно создает сделку в Bitrix24 CRM
  */
 export async function submitLead(lead: LeadData): Promise<{ success: boolean; message?: string }> {
-  // 1. Аналитика (Google Analytics 4 + Meta Pixel)
+  // 1. Аналитика
   trackLeadEvent({
     formType: lead.formType,
     cargoType: lead.cargoType,
     route: [lead.origin, lead.destination].filter(Boolean).join(' -> '),
   })
 
-  // 2. Первичный метод: Vercel Serverless Function /api/lead (Сервер-к-серверу)
+  // 2. Параллельная гарантированная доставка (Telegram + Bitrix24)
   try {
-    const apiRes = await fetch('/api/lead', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(lead),
-    })
+    const tgText = formatTelegramMessage(lead)
 
-    if (apiRes.ok) {
-      const data = await apiRes.json()
-      if (data.success) {
-        return { success: true }
-      }
-    }
-  } catch {
-    // В случае ошибки переходим к прямому каналу
-  }
-
-  // 3. Резервный метод: Прямая клиентская отправка
-  try {
-    const text = formatTelegramDirectMessage(lead)
     const [tgRes] = await Promise.all([
       fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           chat_id: TG_CHAT_ID,
-          text: text,
+          text: tgText,
           parse_mode: 'HTML',
           disable_web_page_preview: true,
         }),
       }),
-      sendDirectToBitrix24(lead),
+      sendToBitrix24Direct(lead),
     ])
 
     const tgData = await tgRes.json()
