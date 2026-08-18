@@ -18,6 +18,13 @@ export interface LeadData {
 const TG_BOT_TOKEN = '8808616806:AAG1SuTDTZ4ZdBftTedFIvpUocEdXthqQRE'
 const TG_CHAT_ID = '-5009438060'
 
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+}
+
 function formatTelegramDirectMessage(lead: LeadData): string {
   const dateStr = new Date().toLocaleString('uk-UA', { timeZone: 'Europe/Kyiv' })
 
@@ -76,46 +83,18 @@ function formatTelegramDirectMessage(lead: LeadData): string {
   return lines.join('\n')
 }
 
-function escapeHtml(text: string): string {
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-}
-
 /**
- * Единая функция отправки лида с сайта:
- * 1. Пробует Vercel API `/api/send-lead`
- * 2. Если API недоступен (fallback) -> шлёт напрямую в Telegram
- * 3. Отправляет событие аналитики в GA4 и Meta Pixel
+ * Прямая и надёжная отправка лида в Telegram бот и трекинг аналитики
  */
 export async function submitLead(lead: LeadData): Promise<{ success: boolean; message?: string }> {
-  // Трекинг аналитики
+  // 1. Аналитика (Google Analytics 4 + Meta Pixel)
   trackLeadEvent({
     formType: lead.formType,
     cargoType: lead.cargoType,
     route: [lead.origin, lead.destination].filter(Boolean).join(' -> '),
   })
 
-  // 1. Попытка через бэкенд `/api/send-lead` (с поддержкой Bitrix24 и Telegram)
-  try {
-    const res = await fetch('/api/send-lead', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(lead),
-    })
-
-    if (res.ok) {
-      const data = await res.json()
-      if (data.ok) {
-        return { success: true }
-      }
-    }
-  } catch {
-    // В локальном дев-режиме или при сбое эндпоинта переходим к прямому фоллбеку
-  }
-
-  // 2. Прямой фоллбек в Telegram API
+  // 2. Отправка в Telegram Bot API
   try {
     const text = formatTelegramDirectMessage(lead)
     const tgRes = await fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage`, {
@@ -128,6 +107,7 @@ export async function submitLead(lead: LeadData): Promise<{ success: boolean; me
         disable_web_page_preview: true,
       }),
     })
+
     const tgData = await tgRes.json()
     if (tgData.ok) {
       return { success: true }
