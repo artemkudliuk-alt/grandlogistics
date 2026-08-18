@@ -85,7 +85,7 @@ function formatTelegramDirectMessage(lead: LeadData): string {
 }
 
 /**
- * Отправка в Bitrix24 REST API через URLSearchParams (CORS-friendly, мгновенное создание сделки и лида)
+ * Отправка в Bitrix24 REST API: строго 1 Сделка (Deal) на Канбан-доске за каждую заявку
  */
 async function sendToBitrix24(lead: LeadData): Promise<void> {
   try {
@@ -94,19 +94,20 @@ async function sendToBitrix24(lead: LeadData): Promise<void> {
     const route = [lead.origin, lead.destination].filter(Boolean).join(' -> ')
 
     const commentsList = [
-      `Джерело: ${lead.formType}`,
-      contact ? `Контакт: ${contact}` : '',
+      `Джерело: ${lead.formType === 'quiz' ? 'Квіз-калькулятор' : lead.formType === 'quick_calc' ? 'Швидкий розрахунок' : 'Контактна форма'}`,
+      name ? `Клієнт: ${name}` : '',
+      contact ? `Телефон: ${contact}` : '',
       route ? `Маршрут: ${route}` : '',
       lead.cargoType ? `Вантаж: ${lead.cargoType}` : '',
       lead.weight || lead.volume ? `Вага/Об'єм: ${lead.weight || '-'}т / ${lead.volume || '-'}м³` : '',
-      lead.extras?.length ? `Послуги: ${lead.extras.join(', ')}` : '',
+      lead.extras?.length ? `Додаткові послуги: ${lead.extras.join(', ')}` : '',
       lead.comment ? `Коментар: ${lead.comment}` : '',
-      `Мова: ${lead.lang || 'UK'}`,
+      `Мова інтерфейсу: ${lead.lang || 'UK'}`,
     ].filter(Boolean).join('\n')
 
     const dealTitle = `Заявка: ${route || lead.cargoType || 'Логістика'} (${contact || name})`
 
-    // 1. Создаем Сделку (Deal) в колонке "New" канбана
+    // Создаем ровно 1 Сделку (Deal) в колонке "New" канбана
     const dealParams = new URLSearchParams()
     dealParams.append('fields[TITLE]', dealTitle)
     dealParams.append('fields[STAGE_ID]', 'NEW')
@@ -114,28 +115,10 @@ async function sendToBitrix24(lead: LeadData): Promise<void> {
     dealParams.append('fields[SOURCE_ID]', 'WEB')
     dealParams.append('fields[OPENED]', 'Y')
 
-    // 2. Создаем Лид (Lead)
-    const leadParams = new URLSearchParams()
-    leadParams.append('fields[TITLE]', dealTitle)
-    leadParams.append('fields[NAME]', name)
-    if (contact) {
-      leadParams.append('fields[PHONE][0][VALUE]', contact)
-      leadParams.append('fields[PHONE][0][VALUE_TYPE]', 'WORK')
-    }
-    leadParams.append('fields[COMMENTS]', commentsList)
-    leadParams.append('fields[SOURCE_ID]', 'WEB')
-    leadParams.append('fields[OPENED]', 'Y')
-
-    await Promise.all([
-      fetch(`${BITRIX24_WEBHOOK}crm.deal.add.json`, {
-        method: 'POST',
-        body: dealParams,
-      }),
-      fetch(`${BITRIX24_WEBHOOK}crm.lead.add.json`, {
-        method: 'POST',
-        body: leadParams,
-      }),
-    ])
+    await fetch(`${BITRIX24_WEBHOOK}crm.deal.add.json`, {
+      method: 'POST',
+      body: dealParams,
+    })
   } catch (err) {
     console.warn('Bitrix24 submission error:', err)
   }
