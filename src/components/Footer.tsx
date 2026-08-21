@@ -46,7 +46,7 @@ export function Footer() {
                 Telegram
               </a>
               <a
-                href="https://wa.me/380665715295"
+                href="https://wa.me/380930038505"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-xs font-bold text-slate-700 hover:bg-[#25D366]/10 hover:border-[#25D366]/40 hover:text-[#25D366] transition-all duration-200 shadow-sm"
@@ -87,13 +87,14 @@ export function Footer() {
                 <div className="text-slate-800 leading-relaxed font-semibold">
                   <div>+38 048 795-21-01</div>
                   <div className="text-slate-500 text-xs font-normal">Факс: +38 048 705-14-52</div>
-                  <div>+38 066 571-52-95</div>
+                  <div>+38 093 003-85-05</div>
+                  <div>+38 096 418-82-61</div>
                 </div>
               </li>
               <li className="flex items-center gap-3">
                 <Mail className="h-4 w-4 shrink-0 text-[#5a9c2e]" strokeWidth={2.5} />
-                <a href="mailto:alexandra@grandlog.com.ua" className="text-slate-800 hover:text-[#5a9c2e] font-semibold transition-colors duration-200 break-all">
-                  alexandra@grandlog.com.ua
+                <a href="mailto:tatyana.k@grandlog.com.ua" className="text-slate-800 hover:text-[#5a9c2e] font-semibold transition-colors duration-200 break-all">
+                  tatyana.k@grandlog.com.ua
                 </a>
               </li>
               <li className="flex items-center gap-3">
